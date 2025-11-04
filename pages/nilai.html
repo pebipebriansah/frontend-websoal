@@ -1,0 +1,35 @@
+<h1 class="text-2xl font-bold mb-4">Data Nilai Praktik</h1>
+
+<!-- Tabel Data Nilai Siswa -->
+<div class="bg-white rounded-lg shadow overflow-x-auto">
+  <table class="w-full text-sm text-left border border-gray-300">
+    <thead class="bg-gray-100 text-gray-700">
+      <tr>
+        <th class="border p-2">No</th>
+        <th class="border p-2">Nama Anggota</th>
+        <th class="border p-2">Nilai Pengerjaan</th>
+        <th class="border p-2">Keseimbangan</th>
+        <th class="border p-2">Kekuatan</th>
+        <th class="border p-2">Ketahanan</th>
+        <th class="border p-2">Waktu Pengerjaan</th>
+        <th class="border p-2">Status</th>
+        <th class="border p-2">Aksi</th>
+      </tr>
+    </thead>
+    <tbody id="tabelNilai" class="text-gray-800">
+      <tr>
+        <td colspan="8" class="text-center text-gray-500 p-2">Memuat data...</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Memanggil script NilaiModule -->
+<script src="js/nilai.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    if (window.NilaiModule) {
+      window.NilaiModule.init("tabelNilai");
+    }
+  });
+</script>

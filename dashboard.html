@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Aplikasi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="bg-gray-100 min-h-screen flex">
+  <!-- Sidebar -->
+  <aside class="w-64 bg-blue-800 text-white flex flex-col p-5 space-y-2">
+    <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
+      <i class="fa-solid fa-layer-group"></i> Dashboard
+    </h2>
+
+    <button onclick="loadPage('home')" class="text-left px-3 py-2 rounded hover:bg-blue-700">
+      <i class="fa-solid fa-house mr-2"></i> Dashboard
+    </button>
+    <button onclick="loadPage('anggota')" class="text-left px-3 py-2 rounded hover:bg-blue-700">
+  <i class="fa-solid fa-users mr-2"></i> Data Anggota
+</button>
+    <button onclick="loadPage('soal')" class="text-left px-3 py-2 rounded hover:bg-blue-700">
+      <i class="fa-solid fa-file-lines mr-2"></i> Data Soal
+    </button>
+    <button onclick="loadPage('nilai')" class="text-left px-3 py-2 rounded hover:bg-blue-700">
+      <i class="fa-solid fa-chart-line mr-2"></i> Data Nilai
+    </button>
+
+    <div class="mt-auto">
+      <hr class="my-3 border-blue-500" />
+      <p class="text-sm mb-2 opacity-80"><i class="fa-solid fa-user"></i> Admin</p>
+      <button onclick="logout()" class="w-full bg-red-600 hover:bg-red-700 px-3 py-2 rounded transition">
+        <i class="fa-solid fa-right-from-bracket mr-1"></i> Logout
+      </button>
+    </div>
+  </aside>
+
+  <!-- Konten Dinamis -->
+  <main id="content" class="flex-1 p-8"></main>
+
+  <!-- Script -->
+  <script src="js/main.js"></script>
+  <script src="js/soal.js"></script>
+  <script src="js/nilai.js"></script>
+  <script>
+  // Muat halaman home saat pertama kali dibuka
+  document.addEventListener("DOMContentLoaded", () => {
+    loadPage("home");
+  });
+</script>
+
+</body>
+</html>
