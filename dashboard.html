@@ -7,51 +7,88 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Custom styles untuk perbaikan tampilan */
+    .sidebar-item {
+      transition: all 0.2s ease;
+      border-left: 3px solid transparent;
+    }
+    .sidebar-item:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      border-left-color: #ffffff;
+    }
+    .sidebar-item.active {
+      background-color: rgba(255, 255, 255, 0.15);
+      border-left-color: #ffffff;
+    }
+    .table-container {
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    @media (max-width: 768px) {
+      .table-container {
+        overflow-x: auto;
+      }
+    }
+  </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen flex">
+<body class="bg-gray-50 min-h-screen flex">
   <!-- Sidebar -->
-  <aside class="w-64 bg-blue-800 text-white flex flex-col p-5 space-y-2">
-    <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
-      <i class="fa-solid fa-layer-group"></i> Dashboard
-    </h2>
+  <aside class="w-64 bg-blue-800 text-white flex flex-col p-5 space-y-2 shadow-lg">
+    <div class="mb-6 pt-2">
+      <h2 class="text-xl font-semibold flex items-center gap-2">
+        <i class="fa-solid fa-layer-group"></i> Dashboard
+      </h2>
+      <p class="text-xs text-blue-200 mt-1">Sistem Manajemen Ujian</p>
+    </div>
 
-    <button onclick="loadPage('home')" class="text-left px-3 py-2 rounded hover:bg-blue-700">
-      <i class="fa-solid fa-house mr-2"></i> Dashboard
+    <button onclick="loadPage('home')" class="sidebar-item text-left px-3 py-2.5 rounded">
+      <i class="fa-solid fa-house mr-2 w-5 text-center"></i> Dashboard
     </button>
-    <button onclick="loadPage('anggota')" class="text-left px-3 py-2 rounded hover:bg-blue-700">
-  <i class="fa-solid fa-users mr-2"></i> Data Anggota
-</button>
-    <button onclick="loadPage('soal')" class="text-left px-3 py-2 rounded hover:bg-blue-700">
-      <i class="fa-solid fa-file-lines mr-2"></i> Data Soal
+    <button onclick="loadPage('anggota')" class="sidebar-item text-left px-3 py-2.5 rounded">
+      <i class="fa-solid fa-users mr-2 w-5 text-center"></i> Data Anggota
     </button>
-    <button onclick="loadPage('nilai')" class="text-left px-3 py-2 rounded hover:bg-blue-700">
-      <i class="fa-solid fa-chart-line mr-2"></i> Data Nilai
+    <button onclick="loadPage('soal')" class="sidebar-item text-left px-3 py-2.5 rounded">
+      <i class="fa-solid fa-file-lines mr-2 w-5 text-center"></i> Data Soal
+    </button>
+    <button onclick="loadPage('nilai')" class="sidebar-item text-left px-3 py-2.5 rounded">
+      <i class="fa-solid fa-chart-line mr-2 w-5 text-center"></i> Data Nilai
     </button>
 
-    <div class="mt-auto">
-      <hr class="my-3 border-blue-500" />
-      <p class="text-sm mb-2 opacity-80"><i class="fa-solid fa-user"></i> Admin</p>
-      <button onclick="logout()" class="w-full bg-red-600 hover:bg-red-700 px-3 py-2 rounded transition">
-        <i class="fa-solid fa-right-from-bracket mr-1"></i> Logout
+    <div class="mt-auto pt-4">
+      <hr class="my-3 border-blue-600" />
+      <div class="flex items-center mb-2">
+        <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mr-2">
+          <i class="fa-solid fa-user text-sm"></i>
+        </div>
+        <div>
+          <p class="text-sm font-medium">Admin</p>
+          <p class="text-xs text-blue-200">Administrator</p>
+        </div>
+      </div>
+      <button onclick="logout()" class="w-full bg-blue-700 hover:bg-blue-600 px-3 py-2.5 rounded transition flex items-center justify-center">
+        <i class="fa-solid fa-right-from-bracket mr-2"></i> Logout
       </button>
     </div>
   </aside>
 
   <!-- Konten Dinamis -->
-  <main id="content" class="flex-1 p-8"></main>
+  <main id="content" class="flex-1 p-6 overflow-auto">
+    <!-- Konten akan dimuat di sini -->
+  </main>
 
   <!-- Script -->
-  <script src="js/main.js"></script>
+   <script src="js/main.js"></script>
   <script src="js/soal.js"></script>
   <script src="js/nilai.js"></script>
   <script>
-  // Muat halaman home saat pertama kali dibuka
-  document.addEventListener("DOMContentLoaded", () => {
-    loadPage("home");
-  });
-</script>
-
+    // Muat halaman home saat pertama kali dibuka
+    document.addEventListener("DOMContentLoaded", () => {
+      loadPage("home");
+    });
+  </script>
 </body>
 </html>
+
+
