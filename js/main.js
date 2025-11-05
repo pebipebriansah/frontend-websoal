@@ -86,7 +86,7 @@ async function loadPage(page) {
 function logout() {
   localStorage.removeItem('id_user');
   localStorage.removeItem('username');
-  window.location.href = 'login.html';
+  window.location.href = 'index.html';
 }
 
 // Load halaman default
