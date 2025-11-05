@@ -38,7 +38,7 @@
         return;
       }
 
-      // Spinner di dalam tabel
+      // --- Loading Spinner ---
       const showLoading = (message = "Memuat data...") => {
         tabel.innerHTML = `
           <tr>
@@ -55,21 +55,18 @@
         `;
       };
 
-      const hideLoading = () => {
-        tabel.innerHTML = "";
-      };
-
       const render = () => {
         if (anggotaList.length === 0) {
           tabel.innerHTML = `
             <tr>
-              <td colspan="6" class="px-4 py-2 text-center text-gray-500">Belum ada data anggota.</td>
-            </tr>`;
+              <td colspan="6" class="px-4 py-4 text-center text-gray-500">Belum ada data anggota.</td>
+            </tr>
+          `;
           return;
         }
 
         tabel.innerHTML = anggotaList.map(a => `
-          <tr>
+          <tr class="hover:bg-gray-50 transition">
             <td class="px-4 py-2">${a.id_anggota}</td>
             <td class="px-4 py-2">${a.nama_anggota}</td>
             <td class="px-4 py-2">${a.username}</td>
@@ -82,28 +79,27 @@
             </td>
           </tr>
         `).join('');
-
-        // Event listener tombol hapus
-        tabel.querySelectorAll(".btn-delete").forEach(btn => {
-          btn.addEventListener("click", async () => {
-            const id = btn.dataset.id;
-            if (!confirm(`Hapus anggota dengan ID ${id}?`)) return;
-
-            try {
-              showLoading("Menghapus anggota...");
-              const json = await AnggotaAPI.delete(id);
-              anggotaList = anggotaList.filter(a => a.id_anggota != id);
-              render();
-              hasil.textContent = json.message || `Anggota dengan ID ${id} berhasil dihapus.`;
-              hasil.className = "text-green-700 mt-2 font-medium";
-            } catch (err) {
-              console.error("Gagal menghapus anggota:", err);
-              hasil.textContent = `Error: ${err.message}`;
-              hasil.className = "text-red-600 mt-2 font-medium";
-            }
-          });
-        });
       };
+
+      // --- Delegasi tombol hapus ---
+      tabel.addEventListener("click", async (e) => {
+        if (!e.target.classList.contains("btn-delete")) return;
+        const id = e.target.dataset.id;
+        if (!confirm(`Hapus anggota dengan ID ${id}?`)) return;
+
+        try {
+          showLoading("Menghapus anggota...");
+          const json = await AnggotaAPI.delete(id);
+          anggotaList = anggotaList.filter(a => a.id_anggota != id);
+          render();
+          hasil.textContent = json.message || `Anggota dengan ID ${id} berhasil dihapus.`;
+          hasil.className = "text-green-700 mt-2 font-medium";
+        } catch (err) {
+          console.error("Gagal menghapus anggota:", err);
+          hasil.textContent = `Error: ${err.message}`;
+          hasil.className = "text-red-600 mt-2 font-medium";
+        }
+      });
 
       const loadData = async () => {
         try {
@@ -116,10 +112,9 @@
         }
       };
 
-      // Tambah anggota
+      // --- Tambah anggota ---
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
-
         const anggotaData = {
           nama_anggota: form.querySelector("#nama_anggota").value,
           alamat: form.querySelector("#alamat").value,
@@ -127,14 +122,13 @@
           username: form.querySelector("#username").value,
           password: form.querySelector("#password").value
         };
-
         try {
           showLoading("Menambahkan anggota...");
           const json = await AnggotaAPI.add(anggotaData);
           anggotaList.push({
-            id_anggota: json.id_anggota,
-            nama_anggota: json.nama_anggota,
-            username: json.username,
+            id_anggota: json.id_anggota || Date.now(),
+            nama_anggota: json.nama_anggota || anggotaData.nama_anggota,
+            username: json.username || anggotaData.username,
             jenis_kelamin: anggotaData.jenis_kelamin,
             alamat: anggotaData.alamat
           });

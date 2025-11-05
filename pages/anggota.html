@@ -6,158 +6,70 @@
   <title>Data Anggota</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-6">
+<body class="bg-gray-50 font-sans p-6">
 
-<h1 class="text-2xl font-bold mb-4">Data Anggota</h1>
+  <div class="max-w-5xl mx-auto">
+    <h1 class="text-3xl font-bold text-gray-800 text-center mb-8">Data Anggota</h1>
 
-<!-- Form Input Anggota -->
-<form id="formAnggota" class="bg-white p-5 rounded-lg shadow mb-6 space-y-4 max-w-2xl">
-  <div class="grid md:grid-cols-2 gap-4">
-    <input type="text" id="nama_anggota" placeholder="Nama Anggota" class="border rounded p-2" required />
-    <input type="text" id="username" placeholder="Username" class="border rounded p-2" required />
-    <input type="password" id="password" placeholder="Password" class="border rounded p-2" required />
-    <select id="jenis_kelamin" class="border rounded p-2" required>
-      <option value="">Jenis Kelamin</option>
-      <option value="L">Laki-laki</option>
-      <option value="P">Perempuan</option>
-    </select>
-    <textarea id="alamat" placeholder="Alamat" class="border rounded p-2 col-span-2"></textarea>
+    <!-- Form Input Anggota -->
+    <form id="formAnggota" class="bg-white p-6 rounded-xl shadow-md mb-8 space-y-5">
+      <div class="grid md:grid-cols-2 gap-5">
+        <input type="text" id="nama_anggota" placeholder="Nama Anggota"
+               class="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required />
+        <input type="text" id="username" placeholder="Username"
+               class="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required />
+        <input type="password" id="password" placeholder="Password"
+               class="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required />
+        <select id="jenis_kelamin"
+                class="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required>
+          <option value="">Jenis Kelamin</option>
+          <option value="L">Laki-laki</option>
+          <option value="P">Perempuan</option>
+        </select>
+        <textarea id="alamat" placeholder="Alamat"
+                  class="border border-gray-300 rounded-lg p-3 col-span-2 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"></textarea>
+      </div>
+
+      <button type="submit"
+              class="bg-blue-600 text-white px-5 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+        Simpan Anggota
+      </button>
+
+      <p id="hasilAnggota" class="mt-2 text-sm font-medium"></p>
+    </form>
+
+    <!-- Tabel Anggota -->
+    <div class="overflow-x-auto bg-white p-6 rounded-xl shadow-md">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">ID</th>
+            <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Nama</th>
+            <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Username</th>
+            <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Jenis Kelamin</th>
+            <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Alamat</th>
+            <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tabelAnggota" class="divide-y divide-gray-200 text-gray-700 text-sm">
+          <!-- Data anggota akan di-render oleh JS -->
+        </tbody>
+      </table>
+    </div>
   </div>
 
-  <button type="submit" class="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800">
-    Simpan Anggota
-  </button>
-
-  <p id="hasilAnggota" class="text-green-700 mt-2 text-sm font-medium"></p>
-</form>
-
-<!-- Tabel Anggota -->
-<div class="overflow-x-auto bg-white p-4 rounded-lg shadow max-w-5xl">
-  <table class="min-w-full divide-y divide-gray-200">
-    <thead class="bg-gray-100">
-      <tr>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">ID</th>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Nama</th>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Username</th>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Jenis Kelamin</th>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Alamat</th>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Aksi</th>
-      </tr>
-    </thead>
-    <tbody id="tabelAnggota" class="divide-y divide-gray-200">
-      <!-- Data anggota akan ditambahkan via JS -->
-    </tbody>
-  </table>
-</div>
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("formAnggota");
-  const hasil = document.getElementById("hasilAnggota");
-  const tabel = document.getElementById("tabelAnggota");
-
-  let anggotaList = [];
-
-  const apiUrl = "https://84fcb76e-ab21-4692-94c1-a86c2b92b808-00-2rnc2uogakcb7.pike.replit.dev/admin/anggota";
-
-  // --- Fungsi fetch GET anggota ---
-  async function fetchAnggota() {
-    console.log("Menjalankan fetch GET ke:", apiUrl);
-    try {
-      const res = await fetch(apiUrl);
-      console.log("Respon fetch:", res);
-
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-
-      const data = await res.json();
-      console.log("Data JSON:", data);
-
-      if (!data.data || !Array.isArray(data.data)) throw new Error("Response API tidak sesuai format");
-
-      anggotaList = data.data;
-      renderTabel();
-      hasil.textContent = "Data anggota berhasil dimuat!";
-      hasil.className = "text-green-700 mt-2 font-medium";
-
-    } catch (err) {
-      console.error("Gagal memuat data anggota:", err);
-      hasil.textContent = "Fetch gagal: kemungkinan CORS, mixed content, atau server mati.";
-      hasil.className = "text-red-600 mt-2 font-medium";
-    }
-  }
-
-  fetchAnggota();
-
-  // --- Fungsi tambah anggota via POST ---
-  async function tambahAnggota(anggota) {
-    try {
-      const res = await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(anggota)
-      });
-
-      const data = await res.json();
-      console.log("Response POST:", data);
-
-      if (!res.ok) throw new Error(data.message || `HTTP error! status: ${res.status}`);
-
-      // Tambahkan ke list lokal agar langsung tampil
-      anggotaList.push(data);
-      renderTabel();
-      hasil.textContent = "Anggota berhasil ditambahkan ke server!";
-      hasil.className = "text-green-700 mt-2 font-medium";
-
-    } catch (err) {
-      console.error("Gagal menambah anggota:", err);
-      hasil.textContent = `Gagal menambah anggota: ${err.message}`;
-      hasil.className = "text-red-600 mt-2 font-medium";
-    }
-  }
-
-  // --- Submit form ---
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-
-    const anggota = {
-      nama_anggota: document.getElementById("nama_anggota").value,
-      username: document.getElementById("username").value,
-      password: document.getElementById("password").value,
-      jenis_kelamin: document.getElementById("jenis_kelamin").value,
-      alamat: document.getElementById("alamat").value
-    };
-
-    tambahAnggota(anggota);
-    form.reset();
-  });
-
-  // --- Render tabel ---
-  function renderTabel() {
-    tabel.innerHTML = "";
-
-    if (anggotaList.length === 0) {
-      tabel.innerHTML = `
-        <tr>
-          <td colspan="5" class="px-4 py-2 text-center text-gray-500">Belum ada data anggota.</td>
-        </tr>
-      `;
-      return;
-    }
-
-    anggotaList.forEach(a => {
-      tabel.innerHTML += `
-        <tr>
-          <td class="px-4 py-2">${a.id_anggota || "-"}</td>
-          <td class="px-4 py-2">${a.nama_anggota}</td>
-          <td class="px-4 py-2">${a.username}</td>
-          <td class="px-4 py-2">${a.jenis_kelamin}</td>
-          <td class="px-4 py-2">${a.alamat}</td>
-        </tr>
-      `;
+  <!-- Panggil JS eksternal -->
+  <script src="js/anggota.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Inisialisasi modul JS
+      if (window.AnggotaModule) {
+        AnggotaModule.init("formAnggota", "tabelAnggota", "hasilAnggota");
+      } else {
+        console.error("AnggotaModule tidak ditemukan di js/anggota.js");
+      }
     });
-  }
-});
-</script>
+  </script>
 
 </body>
 </html>
