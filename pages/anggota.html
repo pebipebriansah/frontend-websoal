@@ -8,11 +8,11 @@
 </head>
 <body class="bg-gray-50 font-sans p-6">
 
-  <div class="max-w-5xl mx-auto">
+  <div class="max-w-6xl mx-auto">
     <h1 class="text-3xl font-bold text-gray-800 text-center mb-8">Data Anggota</h1>
 
     <!-- Form Input Anggota -->
-    <form id="formAnggota" class="bg-white p-6 rounded-xl shadow-md mb-8 space-y-5">
+    <form id="formAnggota" class="bg-white p-6 rounded-xl shadow-md mb-6 space-y-5">
       <div class="grid md:grid-cols-2 gap-5">
         <input type="text" id="nama_anggota" placeholder="Nama Anggota"
                class="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required />
@@ -57,7 +57,7 @@
       </table>
 
       <!-- Pagination -->
-      <div id="paginationAnggota" class="mt-4 flex justify-center space-x-2"></div>
+      <div id="paginationAnggota" class="flex justify-center mt-4 space-x-2"></div>
     </div>
   </div>
 
@@ -65,7 +65,7 @@
   <script src="js/anggota.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      // Inisialisasi modul JS
+      // Inisialisasi modul JS dengan pagination
       if (window.AnggotaModule) {
         AnggotaModule.init("formAnggota", "tabelAnggota", "hasilAnggota", "paginationAnggota");
       } else {
