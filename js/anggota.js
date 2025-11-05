@@ -2,6 +2,8 @@
   const API_BASE = "https://84fcb76e-ab21-4692-94c1-a86c2b92b808-00-2rnc2uogakcb7.pike.replit.dev";
 
   let anggotaList = [];
+  let currentPage = 1;
+  const perPage = 5; // jumlah data per halaman
 
   const AnggotaAPI = {
     getAll: async () => {
@@ -28,17 +30,17 @@
   };
 
   const AnggotaModule = {
-    init: (formId, tabelId, hasilId) => {
+    init: (formId, tabelId, hasilId, paginationId) => {
       const form = document.getElementById(formId);
       const tabel = document.getElementById(tabelId);
       const hasil = document.getElementById(hasilId);
+      const pagination = document.getElementById(paginationId);
 
       if (!form || !tabel || !hasil) {
         console.error("Form, tabel, atau hasil tidak ditemukan!");
         return;
       }
 
-      // --- Loading Spinner ---
       const showLoading = (message = "Memuat data...") => {
         tabel.innerHTML = `
           <tr>
@@ -55,17 +57,24 @@
         `;
       };
 
+      // --- Render tabel berdasarkan halaman ---
       const render = () => {
-        if (anggotaList.length === 0) {
+        const totalPages = Math.ceil(anggotaList.length / perPage);
+        const start = (currentPage - 1) * perPage;
+        const end = start + perPage;
+        const pageData = anggotaList.slice(start, end);
+
+        if (pageData.length === 0) {
           tabel.innerHTML = `
             <tr>
               <td colspan="6" class="px-4 py-4 text-center text-gray-500">Belum ada data anggota.</td>
             </tr>
           `;
+          pagination.innerHTML = "";
           return;
         }
 
-        tabel.innerHTML = anggotaList.map(a => `
+        tabel.innerHTML = pageData.map(a => `
           <tr class="hover:bg-gray-50 transition">
             <td class="px-4 py-2">${a.id_anggota}</td>
             <td class="px-4 py-2">${a.nama_anggota}</td>
@@ -79,6 +88,32 @@
             </td>
           </tr>
         `).join('');
+
+        renderPagination(totalPages);
+      };
+
+      // --- Render tombol pagination ---
+      const renderPagination = (totalPages) => {
+        if (!pagination) return;
+        if (totalPages <= 1) {
+          pagination.innerHTML = "";
+          return;
+        }
+
+        let html = "";
+
+        for (let i = 1; i <= totalPages; i++) {
+          html += `<button class="px-3 py-1 rounded ${i === currentPage ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'}" data-page="${i}">${i}</button>`;
+        }
+
+        pagination.innerHTML = html;
+
+        pagination.querySelectorAll("button").forEach(btn => {
+          btn.addEventListener("click", () => {
+            currentPage = parseInt(btn.dataset.page);
+            render();
+          });
+        });
       };
 
       // --- Delegasi tombol hapus ---
@@ -91,6 +126,9 @@
           showLoading("Menghapus anggota...");
           const json = await AnggotaAPI.delete(id);
           anggotaList = anggotaList.filter(a => a.id_anggota != id);
+          // jika halaman terakhir kosong, pindah ke halaman sebelumnya
+          const totalPages = Math.ceil(anggotaList.length / perPage);
+          if (currentPage > totalPages) currentPage = totalPages || 1;
           render();
           hasil.textContent = json.message || `Anggota dengan ID ${id} berhasil dihapus.`;
           hasil.className = "text-green-700 mt-2 font-medium";
@@ -132,6 +170,8 @@
             jenis_kelamin: anggotaData.jenis_kelamin,
             alamat: anggotaData.alamat
           });
+          // jika halaman terakhir penuh, pindah ke halaman terakhir
+          currentPage = Math.ceil(anggotaList.length / perPage);
           render();
           hasil.textContent = "Anggota berhasil ditambahkan!";
           hasil.className = "text-green-700 mt-2 font-medium";

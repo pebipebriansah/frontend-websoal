@@ -1,43 +1,54 @@
-<h1 class="text-2xl font-bold mb-4">Data Soal</h1>
+<h1 class="text-3xl font-bold text-gray-800 text-center mb-8">Data Soal</h1>
 
 <!-- Form Tambah Soal -->
-<form id="formSoal" class="bg-white p-5 rounded-lg shadow mb-6 space-y-4 max-w-3xl">
-  <div class="grid md:grid-cols-2 gap-4">
-    <textarea id="soal" placeholder="Soal" class="border rounded p-2 col-span-2" rows="3" required></textarea>
-    <input type="text" id="opsiA" placeholder="Opsi A" class="border rounded p-2" required />
-    <input type="text" id="opsiB" placeholder="Opsi B" class="border rounded p-2" required />
-    <input type="text" id="opsiC" placeholder="Opsi C" class="border rounded p-2" required />
-    <input type="text" id="opsiD" placeholder="Opsi D" class="border rounded p-2" required />
-    <input type="number" id="bobot" placeholder="Bobot" class="border rounded p-2" required />
-    <input type="text" id="opsiBenar" placeholder="Opsi Benar" class="border rounded p-2" required />
+<form id="formSoal" class="bg-white p-6 rounded-xl shadow-md mb-8 space-y-5 max-w-4xl mx-auto">
+  <div class="grid md:grid-cols-2 gap-5">
+    <textarea id="soal" placeholder="Soal"
+              class="border border-gray-300 rounded-lg p-3 col-span-2 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+              rows="3" required></textarea>
+    <input type="text" id="opsiA" placeholder="Opsi A"
+           class="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required />
+    <input type="text" id="opsiB" placeholder="Opsi B"
+           class="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required />
+    <input type="text" id="opsiC" placeholder="Opsi C"
+           class="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required />
+    <input type="text" id="opsiD" placeholder="Opsi D"
+           class="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required />
+    <input type="number" id="bobot" placeholder="Bobot"
+           class="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required />
+    <input type="text" id="opsiBenar" placeholder="Opsi Benar"
+           class="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required />
   </div>
-  <button type="submit" class="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800">
+
+  <button type="submit"
+          class="bg-blue-600 text-white px-5 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
     Tambah Soal
   </button>
 </form>
 
 <!-- Tabel Soal -->
-<div class="overflow-x-auto bg-white p-4 rounded-lg shadow max-w-5xl">
+<div class="overflow-x-auto bg-white p-6 rounded-xl shadow-md max-w-6xl mx-auto">
   <table class="min-w-full divide-y divide-gray-200">
     <thead class="bg-gray-100">
       <tr>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">ID</th>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Soal</th>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Opsi A</th>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Opsi B</th>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Opsi C</th>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Opsi D</th>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Bobot</th>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Opsi Benar</th>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Aksi</th>
+        <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">ID</th>
+        <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Soal</th>
+        <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Opsi A</th>
+        <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Opsi B</th>
+        <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Opsi C</th>
+        <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Opsi D</th>
+        <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Bobot</th>
+        <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Opsi Benar</th>
+        <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Aksi</th>
       </tr>
     </thead>
-    <tbody id="tabelSoal" class="divide-y divide-gray-200">
+    <tbody id="tabelSoal" class="divide-y divide-gray-200 text-gray-700 text-sm">
       <tr>
-        <td colspan="8" class="text-center text-gray-500 p-2">Memuat data...</td>
+        <td colspan="9" class="text-center text-gray-500 p-3">Memuat data...</td>
       </tr>
     </tbody>
   </table>
-  <!-- Tempatkan ini setelah tabel Anda -->
-<div id="pagination" class="mt-4"></div>
+
+  <!-- Pagination -->
+  <div id="pagination" class="mt-4 flex justify-center space-x-2"></div>
 </div>

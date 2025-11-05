@@ -55,6 +55,9 @@
           <!-- Data anggota akan di-render oleh JS -->
         </tbody>
       </table>
+
+      <!-- Pagination -->
+      <div id="paginationAnggota" class="mt-4 flex justify-center space-x-2"></div>
     </div>
   </div>
 
@@ -64,7 +67,7 @@
     document.addEventListener("DOMContentLoaded", () => {
       // Inisialisasi modul JS
       if (window.AnggotaModule) {
-        AnggotaModule.init("formAnggota", "tabelAnggota", "hasilAnggota");
+        AnggotaModule.init("formAnggota", "tabelAnggota", "hasilAnggota", "paginationAnggota");
       } else {
         console.error("AnggotaModule tidak ditemukan di js/anggota.js");
       }
