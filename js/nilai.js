@@ -5,10 +5,9 @@
   const NilaiAPI = {
     getAll: async () => {
       const res = await fetch(`${API_BASE}/admin/nilai`);
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const json = await res.json();
-      if (!json.data || !Array.isArray(json.data)) throw new Error("Response API tidak sesuai format");
-      return json.data;
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return json.data || [];
     },
     update: async (data) => {
       const res = await fetch(`${API_BASE}/admin/update-nilai`, {
@@ -16,8 +15,9 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
       });
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-      return await res.json();
+      const json = await res.json();
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return json; // return response detail dari backend
     }
   };
 
@@ -29,17 +29,8 @@
       const showLoading = (msg = "Memuat data...") => {
         tabel.innerHTML = `
           <tr>
-            <td colspan="11" class="px-4 py-6 text-center">
-              <div class="flex flex-col items-center justify-center space-y-2">
-                <svg class="animate-spin h-8 w-8 text-blue-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                </svg>
-                <span class="text-blue-700 font-medium">${msg}</span>
-              </div>
-            </td>
-          </tr>
-        `;
+            <td colspan="11" class="px-4 py-6 text-center text-blue-700">${msg}</td>
+          </tr>`;
       };
 
       const render = () => {
@@ -49,41 +40,39 @@
         }
 
         tabel.innerHTML = nilaiList.map((item, i) => {
-          const bisaEdit = (
-            item.nilai_keseimbangan == null ||
-            item.nilai_kekuatan == null ||
-            item.nilai_ketahanan == null ||
-            item.keterangan == null
-          );
+          const sudahLengkap =
+            item.nilai_keseimbangan != null &&
+            item.nilai_kekuatan != null &&
+            item.nilai_ketahanan != null &&
+            item.keterangan != null;
 
           return `
             <tr data-id="${item.id_nilai}">
               <td class="border p-2 text-center">${i + 1}</td>
               <td class="border p-2">${item.nama_anggota || '-'}</td>
               <td class="border p-2 text-center">${item.nilai_pengerjaan ?? '-'}</td>
-              <td class="border p-2 text-center" contenteditable="${item.nilai_keseimbangan == null}">${item.nilai_keseimbangan ?? ''}</td>
-              <td class="border p-2 text-center" contenteditable="${item.nilai_kekuatan == null}">${item.nilai_kekuatan ?? ''}</td>
-              <td class="border p-2 text-center" contenteditable="${item.nilai_ketahanan == null}">${item.nilai_ketahanan ?? ''}</td>
-              <td class="border p-2 text-center" contenteditable="${item.keterangan == null}">${item.keterangan ?? ''}</td>
+              <td class="border p-2 text-center ${item.nilai_keseimbangan != null ? 'bg-gray-100' : ''}" contenteditable="${item.nilai_keseimbangan == null}">${item.nilai_keseimbangan ?? ''}</td>
+              <td class="border p-2 text-center ${item.nilai_kekuatan != null ? 'bg-gray-100' : ''}" contenteditable="${item.nilai_kekuatan == null}">${item.nilai_kekuatan ?? ''}</td>
+              <td class="border p-2 text-center ${item.nilai_ketahanan != null ? 'bg-gray-100' : ''}" contenteditable="${item.nilai_ketahanan == null}">${item.nilai_ketahanan ?? ''}</td>
+              <td class="border p-2 text-center ${item.keterangan != null ? 'bg-gray-100' : ''}" contenteditable="${item.keterangan == null}">${item.keterangan ?? ''}</td>
               <td class="border p-2 text-center">${item.waktu_pengerjaan ?? '-'}</td>
               <td class="border p-2 text-center">${item.status ?? '-'}</td>
               <td class="border p-2 text-center">
-                <button class="updateBtn bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 text-sm" ${!bisaEdit ? 'disabled' : ''}>
+                <button class="updateBtn ${sudahLengkap ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white px-2 py-1 rounded text-sm" ${sudahLengkap ? 'disabled' : ''}>
                   Update
                 </button>
               </td>
-            </tr>
-          `;
+            </tr>`;
         }).join('');
 
-        // Event listener untuk setiap tombol Update
+        // Update handler
         tabel.querySelectorAll(".updateBtn").forEach(btn => {
           btn.addEventListener("click", async (e) => {
             const row = e.target.closest("tr");
-            const id_nilai = row.dataset.id;
+            const id_nilai = Number(row.dataset.id);
 
             const payload = {
-              id_nilai: Number(id_nilai),
+              id_nilai,
               nilai_keseimbangan: row.children[3].textContent.trim() || null,
               nilai_kekuatan: row.children[4].textContent.trim() || null,
               nilai_ketahanan: row.children[5].textContent.trim() || null,
@@ -91,27 +80,27 @@
             };
 
             try {
-              showLoading("Mengupdate nilai...");
-              await NilaiAPI.update(payload);
-              await loadData(); // Refresh agar keterangan baru tampil
-              alert(`Nilai anggota "${row.children[1].textContent}" berhasil diperbarui!`);
+              showLoading("Menyimpan pembaruan...");
+              const updated = await NilaiAPI.update(payload);
+
+              // Ambil data terbaru dari backend setelah update
+              await new Promise(res => setTimeout(res, 500)); // beri waktu backend menulis DB
+              nilaiList = await NilaiAPI.getAll();
+              render();
+
+              alert(`✅ Data anggota "${row.children[1].textContent}" berhasil diperbarui!`);
             } catch (err) {
               console.error("Gagal update nilai:", err);
-              alert("Gagal update nilai. Lihat console.");
+              alert("Gagal update nilai. Cek console untuk detail.");
             }
           });
         });
       };
 
       const loadData = async () => {
-        try {
-          showLoading();
-          nilaiList = await NilaiAPI.getAll();
-          render();
-        } catch (err) {
-          console.error("Gagal memuat data nilai:", err);
-          tabel.innerHTML = `<tr><td colspan="11" class="text-center text-red-600 p-2">Gagal memuat data. Lihat console.</td></tr>`;
-        }
+        showLoading();
+        nilaiList = await NilaiAPI.getAll();
+        render();
       };
 
       loadData();
