@@ -44,6 +44,9 @@ async function loadPage(page) {
       case 'anggota':
         scriptPath = 'js/anggota.js';
         break;
+      case 'description':
+        scriptPath = 'js/description.js';
+        break;
       case 'home':
         scriptPath = 'js/home.js'; // Script untuk dashboard
         break;
@@ -54,7 +57,7 @@ async function loadPage(page) {
       currentScript = document.createElement('script');
       currentScript.src = scriptPath;
       currentScript.onload = () => {
-        console.log(`Script ${scriptPath} dimuat.`);
+        console.log(`✅ Script ${scriptPath} berhasil dimuat.`);
 
         // Inisialisasi modul sesuai halaman
         switch (page) {
@@ -62,12 +65,25 @@ async function loadPage(page) {
             if (typeof initSoal === 'function') initSoal();
             break;
           case 'nilai':
-            if (typeof NilaiModule !== 'undefined') 
-              NilaiModule.init("tabelNilai"); // ID tbody tabel nilai
+            if (typeof NilaiModule !== 'undefined')
+              NilaiModule.init("tabelNilai");
             break;
           case 'anggota':
-            if (typeof AnggotaModule !== 'undefined') 
+            if (typeof AnggotaModule !== 'undefined')
               AnggotaModule.init("formAnggota", "tabelAnggota", "hasilAnggota");
+            break;
+          case 'description':
+            if (typeof DescriptionModule !== 'undefined') {
+              DescriptionModule.init(
+                "formDescription",       // id form
+                "selectMateri",          // id dropdown materi
+                "namaMateriBaru",        // input untuk materi baru
+                "containerMateriBaru",   // container input materi baru
+                "tabelDescription",      // id tabel deskripsi
+                "hasil",                 // id hasil pesan
+                "pagination"             // id pagination
+              );
+            }
             break;
           case 'home':
             if (typeof DashboardModule !== 'undefined') DashboardModule.init();
