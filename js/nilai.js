@@ -29,7 +29,7 @@
       const showLoading = (msg = "Memuat data...") => {
         tabel.innerHTML = `
           <tr>
-            <td colspan="10" class="px-4 py-6 text-center">
+            <td colspan="11" class="px-4 py-6 text-center">
               <div class="flex flex-col items-center justify-center space-y-2">
                 <svg class="animate-spin h-8 w-8 text-blue-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -44,7 +44,7 @@
 
       const render = () => {
         if (nilaiList.length === 0) {
-          tabel.innerHTML = `<tr><td colspan="10" class="text-center text-gray-500 p-2">Belum ada data nilai.</td></tr>`;
+          tabel.innerHTML = `<tr><td colspan="11" class="text-center text-gray-500 p-2">Belum ada data nilai.</td></tr>`;
           return;
         }
 
@@ -64,9 +64,9 @@
               <td class="border p-2 text-center" contenteditable="${item.nilai_keseimbangan == null}">${item.nilai_keseimbangan ?? ''}</td>
               <td class="border p-2 text-center" contenteditable="${item.nilai_kekuatan == null}">${item.nilai_kekuatan ?? ''}</td>
               <td class="border p-2 text-center" contenteditable="${item.nilai_ketahanan == null}">${item.nilai_ketahanan ?? ''}</td>
+              <td class="border p-2 text-center" contenteditable="${item.keterangan == null}">${item.keterangan ?? ''}</td>
               <td class="border p-2 text-center">${item.waktu_pengerjaan ?? '-'}</td>
               <td class="border p-2 text-center">${item.status ?? '-'}</td>
-              <td class="border p-2 text-center" contenteditable="${item.keterangan == null}">${item.keterangan ?? ''}</td>
               <td class="border p-2 text-center">
                 <button class="updateBtn bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 text-sm" ${!bisaEdit ? 'disabled' : ''}>
                   Update
@@ -76,24 +76,24 @@
           `;
         }).join('');
 
+        // Event listener untuk setiap tombol Update
         tabel.querySelectorAll(".updateBtn").forEach(btn => {
           btn.addEventListener("click", async (e) => {
-            if (btn.disabled) return;
-
             const row = e.target.closest("tr");
             const id_nilai = row.dataset.id;
+
             const payload = {
               id_nilai: Number(id_nilai),
-              nilai_keseimbangan: Number(row.children[3].textContent.trim()) || null,
-              nilai_kekuatan: Number(row.children[4].textContent.trim()) || null,
-              nilai_ketahanan: Number(row.children[5].textContent.trim()) || null,
-              keterangan: row.children[8].textContent.trim() || null
+              nilai_keseimbangan: row.children[3].textContent.trim() || null,
+              nilai_kekuatan: row.children[4].textContent.trim() || null,
+              nilai_ketahanan: row.children[5].textContent.trim() || null,
+              keterangan: row.children[6].textContent.trim() || null
             };
 
             try {
               showLoading("Mengupdate nilai...");
               await NilaiAPI.update(payload);
-              await loadData(); // refresh data agar keterangan terbaru tampil
+              await loadData(); // Refresh agar keterangan baru tampil
               alert(`Nilai anggota "${row.children[1].textContent}" berhasil diperbarui!`);
             } catch (err) {
               console.error("Gagal update nilai:", err);
@@ -110,7 +110,7 @@
           render();
         } catch (err) {
           console.error("Gagal memuat data nilai:", err);
-          tabel.innerHTML = `<tr><td colspan="10" class="text-center text-red-600 p-2">Gagal memuat data. Lihat console.</td></tr>`;
+          tabel.innerHTML = `<tr><td colspan="11" class="text-center text-red-600 p-2">Gagal memuat data. Lihat console.</td></tr>`;
         }
       };
 
