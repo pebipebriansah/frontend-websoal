@@ -24,9 +24,9 @@
       </div>
 
       <!-- Tambah Materi Baru -->
-      <div id="materiBaruContainer" class="hidden">
+      <div id="containerMateriBaru" class="hidden">
         <label class="block text-sm font-semibold mb-2 text-gray-700">Tambah Materi Baru</label>
-        <input type="text" id="nama_materi_baru" placeholder="Nama Materi Baru"
+        <input type="text" id="namaMateriBaru" placeholder="Nama Materi Baru"
                class="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
       </div>
 
@@ -43,7 +43,7 @@
         Simpan Description
       </button>
 
-      <p id="hasilDescription" class="mt-2 text-sm font-medium"></p>
+      <p id="hasil" class="mt-2 text-sm font-medium"></p>
     </form>
 
     <!-- Tabel Description -->
@@ -58,34 +58,14 @@
           </tr>
         </thead>
         <tbody id="tabelDescription" class="divide-y divide-gray-200 text-gray-700 text-sm">
-          <!-- Data description akan di-render oleh JS -->
+          <!-- Data akan di-render oleh JS -->
         </tbody>
       </table>
 
       <!-- Pagination -->
-      <div id="paginationDescription" class="flex justify-center mt-4 space-x-2"></div>
+      <div id="pagination" class="flex justify-center mt-4 space-x-2"></div>
     </div>
   </div>
-
-  <!-- Script -->
-  <script src="js/description.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      if (window.DescriptionModule) {
-        DescriptionModule.init(
-          "formDescription",
-          "selectMateri",
-          "nama_materi_baru",
-          "materiBaruContainer",
-          "tabelDescription",
-          "hasilDescription",
-          "paginationDescription"
-        );
-      } else {
-        console.error("DescriptionModule tidak ditemukan di js/description.js");
-      }
-    });
-  </script>
 
 </body>
 </html>
