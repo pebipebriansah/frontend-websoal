@@ -26,8 +26,7 @@
       const tabel = document.getElementById("tabelNilai");
       if (!tabel) return console.error("Element tabelNilai tidak ditemukan!");
 
-      // Fungsi spinner di tengah tabel
-      const showLoading = (message = "Memuat data...") => {
+      const showLoading = (msg = "Memuat data...") => {
         tabel.innerHTML = `
           <tr>
             <td colspan="10" class="px-4 py-6 text-center">
@@ -36,7 +35,7 @@
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                 </svg>
-                <span class="text-blue-700 font-medium">${message}</span>
+                <span class="text-blue-700 font-medium">${msg}</span>
               </div>
             </td>
           </tr>
@@ -50,23 +49,26 @@
         }
 
         tabel.innerHTML = nilaiList.map((item, i) => {
-          const editable = true; // hanya kolom tertentu yang bisa diubah
+          const bisaEdit = (
+            item.nilai_keseimbangan == null ||
+            item.nilai_kekuatan == null ||
+            item.nilai_ketahanan == null ||
+            item.keterangan == null
+          );
+
           return `
             <tr data-id="${item.id_nilai}">
               <td class="border p-2 text-center">${i + 1}</td>
               <td class="border p-2">${item.nama_anggota || '-'}</td>
               <td class="border p-2 text-center">${item.nilai_pengerjaan ?? '-'}</td>
-
-              <!-- Kolom editable -->
-              <td class="border p-2 text-center" contenteditable="${editable}">${item.nilai_keseimbangan ?? ''}</td>
-              <td class="border p-2 text-center" contenteditable="${editable}">${item.nilai_kekuatan ?? ''}</td>
-              <td class="border p-2 text-center" contenteditable="${editable}">${item.nilai_ketahanan ?? ''}</td>
-              <td class="border p-2 text-center" contenteditable="${editable}">${item.keterangan ?? ''}</td>
-
+              <td class="border p-2 text-center" contenteditable="${item.nilai_keseimbangan == null}">${item.nilai_keseimbangan ?? ''}</td>
+              <td class="border p-2 text-center" contenteditable="${item.nilai_kekuatan == null}">${item.nilai_kekuatan ?? ''}</td>
+              <td class="border p-2 text-center" contenteditable="${item.nilai_ketahanan == null}">${item.nilai_ketahanan ?? ''}</td>
               <td class="border p-2 text-center">${item.waktu_pengerjaan ?? '-'}</td>
               <td class="border p-2 text-center">${item.status ?? '-'}</td>
+              <td class="border p-2 text-center" contenteditable="${item.keterangan == null}">${item.keterangan ?? ''}</td>
               <td class="border p-2 text-center">
-                <button class="updateBtn bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 text-sm">
+                <button class="updateBtn bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 text-sm" ${!bisaEdit ? 'disabled' : ''}>
                   Update
                 </button>
               </td>
@@ -74,34 +76,28 @@
           `;
         }).join('');
 
-        // Event listener untuk tombol update
         tabel.querySelectorAll(".updateBtn").forEach(btn => {
           btn.addEventListener("click", async (e) => {
+            if (btn.disabled) return;
+
             const row = e.target.closest("tr");
             const id_nilai = row.dataset.id;
-
-            // Ambil data dari kolom (sesuai urutan tabel)
-            const nilai_keseimbangan = row.children[3].textContent.trim() || null;
-            const nilai_kekuatan = row.children[4].textContent.trim() || null;
-            const nilai_ketahanan = row.children[5].textContent.trim() || null;
-            const keterangan = row.children[6].textContent.trim() || null;
-
             const payload = {
               id_nilai: Number(id_nilai),
-              nilai_keseimbangan: nilai_keseimbangan ? Number(nilai_keseimbangan) : null,
-              nilai_kekuatan: nilai_kekuatan ? Number(nilai_kekuatan) : null,
-              nilai_ketahanan: nilai_ketahanan ? Number(nilai_ketahanan) : null,
-              keterangan: keterangan || null
+              nilai_keseimbangan: Number(row.children[3].textContent.trim()) || null,
+              nilai_kekuatan: Number(row.children[4].textContent.trim()) || null,
+              nilai_ketahanan: Number(row.children[5].textContent.trim()) || null,
+              keterangan: row.children[8].textContent.trim() || null
             };
 
             try {
               showLoading("Mengupdate nilai...");
               await NilaiAPI.update(payload);
-              await loadData();
-              alert(`✅ Nilai anggota "${row.children[1].textContent}" berhasil diperbarui!`);
+              await loadData(); // refresh data agar keterangan terbaru tampil
+              alert(`Nilai anggota "${row.children[1].textContent}" berhasil diperbarui!`);
             } catch (err) {
               console.error("Gagal update nilai:", err);
-              alert("❌ Gagal update nilai. Lihat console.");
+              alert("Gagal update nilai. Lihat console.");
             }
           });
         });
