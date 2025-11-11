@@ -1,6 +1,6 @@
 (() => {
   const API_BASE = "https://84fcb76e-ab21-4692-94c1-a86c2b92b808-00-2rnc2uogakcb7.pike.replit.dev";
-  const perPage = 5; // jumlah data per halaman
+  const perPage = 5;
 
   // 🔹 API untuk Materi
   const MateriAPI = {
@@ -8,8 +8,6 @@
       const res = await fetch(`${API_BASE}/admin/materi`);
       if (!res.ok) throw new Error(`Gagal memuat materi (${res.status})`);
       const json = await res.json();
-      console.log("📦 Data Materi dari API:", json);
-      // Sesuaikan karena data berada di dalam "data"
       return json.data || [];
     },
     add: async (nama_materi) => {
@@ -20,8 +18,6 @@
       });
       if (!res.ok) throw new Error(`Gagal menambah materi (${res.status})`);
       const json = await res.json();
-      console.log("✅ Materi baru:", json);
-      // Tangkap id_materi dari berbagai kemungkinan struktur
       return json.data || json;
     },
   };
@@ -34,6 +30,12 @@
       const json = await res.json();
       return json.data || [];
     },
+    getByMateri: async (id_materi) => {
+      const res = await fetch(`${API_BASE}/admin/description/${id_materi}`);
+      if (!res.ok) return null;
+      const json = await res.json();
+      return json.data?.[0] || null;
+    },
     add: async (id_materi, description) => {
       const res = await fetch(`${API_BASE}/admin/tambah-description`, {
         method: "POST",
@@ -43,9 +45,18 @@
       if (!res.ok) throw new Error(`Gagal menambah deskripsi (${res.status})`);
       return await res.json();
     },
+    update: async (id_description, description) => {
+      const res = await fetch(`${API_BASE}/admin/update-description`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id_description, description }),
+      });
+      if (!res.ok) throw new Error(`Gagal memperbarui deskripsi (${res.status})`);
+      return await res.json();
+    },
   };
 
-  // 🔹 Modul utama untuk mengelola Description Materi
+  // 🔹 Modul utama Description
   const DescriptionModule = {
     init: (formId, selectId, inputBaruId, containerBaruId, tabelId, hasilId, paginationId) => {
       const form = document.getElementById(formId);
@@ -59,12 +70,10 @@
       let materiList = [];
       let descriptionList = [];
       let currentPage = 1;
+      let currentDescriptionId = null; // untuk mode update
 
-      // 🔸 Helper tampilkan loading
       const showLoading = (msg = "Memuat...") => {
-        tabel.innerHTML = `
-          <tr><td colspan="4" class="text-center text-blue-600 py-4">${msg}</td></tr>
-        `;
+        tabel.innerHTML = `<tr><td colspan="4" class="text-center text-blue-600 py-4">${msg}</td></tr>`;
       };
 
       // 🔸 Render tabel description
@@ -80,19 +89,20 @@
           return;
         }
 
-        tabel.innerHTML = pageData
-          .map((d) => {
-            const materi = materiList.find((m) => m.id_materi === d.id_materi);
-            return `
-              <tr class="hover:bg-gray-50">
-                <td class="px-5 py-3">${d.id_description}</td>
-                <td class="px-5 py-3 font-medium">${materi ? materi.nama_materi : "-"}</td>
-                <td class="px-5 py-3">${d.description}</td>
-                <td class="px-5 py-3 text-center text-gray-400 text-sm">#${d.id_materi}</td>
-              </tr>
-            `;
-          })
-          .join("");
+        tabel.innerHTML = pageData.map((d) => {
+          const materi = materiList.find((m) => m.id_materi === d.id_materi);
+          return `
+            <tr class="hover:bg-gray-50">
+              <td class="px-5 py-3">${d.id_description}</td>
+              <td class="px-5 py-3 font-medium">${materi ? materi.nama_materi : "-"}</td>
+              <td class="px-5 py-3">${d.description}</td>
+              <td class="px-5 py-3 text-center">
+                <button class="bg-yellow-500 text-white px-2 py-1 rounded" onclick="DescriptionModule.edit(${d.id_description}, ${d.id_materi}, \`${d.description}\`)">
+                  Edit
+                </button>
+              </td>
+            </tr>`;
+        }).join("");
 
         renderPagination(totalPages);
       };
@@ -104,11 +114,10 @@
           return;
         }
 
-        let html = "";
-        for (let i = 1; i <= totalPages; i++) {
-          html += `<button class="px-3 py-1 rounded ${i === currentPage ? "bg-blue-600 text-white" : "bg-gray-200 hover:bg-gray-300"}" data-page="${i}">${i}</button>`;
-        }
-        pagination.innerHTML = html;
+        pagination.innerHTML = Array.from({ length: totalPages }, (_, i) => {
+          const page = i + 1;
+          return `<button class="px-3 py-1 rounded ${page === currentPage ? "bg-blue-600 text-white" : "bg-gray-200 hover:bg-gray-300"}" data-page="${page}">${page}</button>`;
+        }).join("");
 
         pagination.querySelectorAll("button").forEach((btn) => {
           btn.addEventListener("click", () => {
@@ -121,24 +130,18 @@
       // 🔸 Muat data awal
       const loadData = async () => {
         try {
-          showLoading("Memuat data materi & deskripsi...");
+          showLoading("Memuat data...");
           materiList = await MateriAPI.getAll();
           descriptionList = await DescriptionAPI.getAll();
 
-          // isi dropdown materi
           selectMateri.innerHTML = `<option value="">-- Pilih Materi --</option>`;
-          if (materiList.length === 0) {
-            selectMateri.innerHTML += `<option disabled>(Belum ada materi)</option>`;
-          } else {
-            materiList.forEach((m) => {
-              const opt = document.createElement("option");
-              opt.value = m.id_materi;
-              opt.textContent = m.nama_materi;
-              selectMateri.appendChild(opt);
-            });
-          }
+          materiList.forEach((m) => {
+            const opt = document.createElement("option");
+            opt.value = m.id_materi;
+            opt.textContent = m.nama_materi;
+            selectMateri.appendChild(opt);
+          });
 
-          // tambahkan opsi untuk menambah materi baru
           const optBaru = document.createElement("option");
           optBaru.value = "new";
           optBaru.textContent = "+ Tambah Materi Baru";
@@ -150,34 +153,40 @@
         }
       };
 
-      // 🔸 Event: ubah dropdown materi
-      selectMateri.addEventListener("change", () => {
-        if (selectMateri.value === "new") {
+      // 🔸 Cek apakah materi sudah punya deskripsi
+      selectMateri.addEventListener("change", async () => {
+        const selectedId = selectMateri.value;
+        if (selectedId === "new") {
           containerBaru.classList.remove("hidden");
+          return;
+        }
+        containerBaru.classList.add("hidden");
+
+        if (!selectedId) return;
+
+        const existing = await DescriptionAPI.getByMateri(selectedId);
+        const btn = form.querySelector('button[type="submit"]');
+        if (existing) {
+          currentDescriptionId = existing.id_description;
+          document.getElementById("description").value = existing.description;
+          btn.textContent = "Update";
         } else {
-          containerBaru.classList.add("hidden");
-          namaMateriBaru.value = "";
+          currentDescriptionId = null;
+          document.getElementById("description").value = "";
+          btn.textContent = "Simpan";
         }
       });
 
-      // 🔸 Event: submit form
+      // 🔸 Submit form (add/update)
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
         hasil.textContent = "";
-        hasil.className = "mt-2 text-sm font-medium text-blue-600";
-
-        const selectedId = selectMateri.value;
         const deskripsi = document.getElementById("description").value.trim();
-
-        if (!selectedId && !namaMateriBaru.value.trim()) {
-          hasil.textContent = "Pilih materi atau buat baru terlebih dahulu.";
-          hasil.className = "mt-2 text-sm font-medium text-red-600";
-          return;
-        }
+        const selectedId = selectMateri.value;
 
         if (!deskripsi) {
           hasil.textContent = "Deskripsi tidak boleh kosong.";
-          hasil.className = "mt-2 text-sm font-medium text-red-600";
+          hasil.className = "text-red-600";
           return;
         }
 
@@ -188,25 +197,37 @@
           if (selectedId === "new") {
             const materiRes = await MateriAPI.add(namaMateriBaru.value.trim());
             idMateri = materiRes.id_materi || materiRes.data?.id_materi;
-            if (!idMateri) throw new Error("Gagal menambahkan materi baru.");
           } else {
             idMateri = parseInt(selectedId);
           }
 
-          await DescriptionAPI.add(idMateri, deskripsi);
+          if (currentDescriptionId) {
+            await DescriptionAPI.update(currentDescriptionId, deskripsi);
+            hasil.textContent = "✅ Deskripsi berhasil diperbarui!";
+          } else {
+            await DescriptionAPI.add(idMateri, deskripsi);
+            hasil.textContent = "✅ Deskripsi berhasil disimpan!";
+          }
 
-          hasil.textContent = "✅ Deskripsi berhasil disimpan!";
-          hasil.className = "mt-2 text-sm font-medium text-green-700";
+          hasil.className = "text-green-600";
+          currentDescriptionId = null;
           form.reset();
-          containerBaru.classList.add("hidden");
-
+          selectMateri.selectedIndex = 0;
+          form.querySelector('button[type="submit"]').textContent = "Simpan";
           await loadData();
         } catch (err) {
           hasil.textContent = `❌ ${err.message}`;
-          hasil.className = "mt-2 text-sm font-medium text-red-600";
-          console.error(err);
+          hasil.className = "text-red-600";
         }
       });
+
+      // 🔸 Edit manual dari tabel
+      DescriptionModule.edit = (idDesc, idMateri, desc) => {
+        currentDescriptionId = idDesc;
+        selectMateri.value = idMateri;
+        document.getElementById("description").value = desc;
+        form.querySelector('button[type="submit"]').textContent = "Update";
+      };
 
       loadData();
     },
