@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Description Materi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans p-6">
+
+  <div class="max-w-5xl mx-auto">
+    <h1 class="text-3xl font-bold text-gray-800 text-center mb-8">Kelola Description Materi</h1>
+
+    <!-- Form Description -->
+    <form id="formDescription" class="bg-white p-6 rounded-xl shadow-md mb-6 space-y-5">
+
+      <!-- Pilih Materi -->
+      <div>
+        <label class="block text-sm font-semibold mb-2 text-gray-700">Pilih Materi</label>
+        <select id="selectMateri"
+                class="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+          <option value="">-- Pilih Materi --</option>
+        </select>
+      </div>
+
+      <!-- Tambah Materi Baru -->
+      <div id="materiBaruContainer" class="hidden">
+        <label class="block text-sm font-semibold mb-2 text-gray-700">Tambah Materi Baru</label>
+        <input type="text" id="nama_materi_baru" placeholder="Nama Materi Baru"
+               class="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+      </div>
+
+      <!-- Deskripsi -->
+      <div>
+        <label class="block text-sm font-semibold mb-2 text-gray-700">Deskripsi Materi</label>
+        <textarea id="description" placeholder="Tulis deskripsi materi..."
+                  class="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none transition h-32"></textarea>
+      </div>
+
+      <!-- Tombol Simpan -->
+      <button type="submit"
+              class="bg-blue-600 text-white px-5 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+        Simpan Description
+      </button>
+
+      <p id="hasilDescription" class="mt-2 text-sm font-medium"></p>
+    </form>
+
+    <!-- Tabel Description -->
+    <div class="overflow-x-auto bg-white p-6 rounded-xl shadow-md">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">ID</th>
+            <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Materi</th>
+            <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Deskripsi</th>
+            <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tabelDescription" class="divide-y divide-gray-200 text-gray-700 text-sm">
+          <!-- Data description akan di-render oleh JS -->
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div id="paginationDescription" class="flex justify-center mt-4 space-x-2"></div>
+    </div>
+  </div>
+
+  <!-- Script -->
+  <script src="js/description.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      if (window.DescriptionModule) {
+        DescriptionModule.init(
+          "formDescription",
+          "selectMateri",
+          "nama_materi_baru",
+          "materiBaruContainer",
+          "tabelDescription",
+          "hasilDescription",
+          "paginationDescription"
+        );
+      } else {
+        console.error("DescriptionModule tidak ditemukan di js/description.js");
+      }
+    });
+  </script>
+
+</body>
+</html>
