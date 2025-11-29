@@ -1,24 +1,28 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Data Description Materi</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gray-50 font-sans p-6">
 
   <div class="max-w-5xl mx-auto">
-    <h1 class="text-3xl font-bold text-gray-800 text-center mb-8">Kelola Description Materi</h1>
+    <h1 class="text-3xl font-bold text-gray-800 text-center mb-8">
+      Kelola Description Materi
+    </h1>
 
     <!-- Form Description -->
-    <form id="formDescription" class="bg-white p-6 rounded-xl shadow-md mb-6 space-y-5">
+    <form id="formDescription" class="bg-white p-6 rounded-xl shadow-md mb-6 space-y-6">
 
       <!-- Pilih Materi -->
       <div>
         <label class="block text-sm font-semibold mb-2 text-gray-700">Pilih Materi</label>
-        <select id="selectMateri"
-                class="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+        <select id="selectMateri" class="border border-gray-300 rounded-lg p-3 w-full focus:ring-2
+                       focus:ring-blue-500 focus:outline-none transition">
           <option value="">-- Pilih Materi --</option>
         </select>
       </div>
@@ -26,30 +30,55 @@
       <!-- Tambah Materi Baru -->
       <div id="containerMateriBaru" class="hidden">
         <label class="block text-sm font-semibold mb-2 text-gray-700">Tambah Materi Baru</label>
-        <input type="text" id="namaMateriBaru" placeholder="Nama Materi Baru"
-               class="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+        <input type="text" id="namaMateriBaru" placeholder="Nama Materi Baru" class="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 
+                      focus:ring-blue-500 focus:outline-none transition">
       </div>
 
       <!-- Deskripsi -->
       <div>
-        <label class="block text-sm font-semibold mb-2 text-gray-700">Deskripsi Materi</label>
-        <textarea id="description" placeholder="Tulis deskripsi materi..."
-                  class="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none transition h-32"></textarea>
+        <label class="block text-sm font-semibold mb-2 text-gray-700">
+          Deskripsi Materi
+        </label>
+        <textarea id="description" placeholder="Tulis deskripsi materi..." class="border border-gray-300 rounded-lg p-3 w-full focus:ring-2
+                         focus:ring-blue-500 focus:outline-none transition h-32"></textarea>
+      </div>
+
+      <!-- Upload File Image -->
+      <div>
+        <label class="block text-sm font-semibold mb-2 text-gray-700">
+          Upload Gambar (Image)
+        </label>
+        <input type="file" id="image_file" accept="image/*" class="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4
+                      file:rounded-lg file:border-0 file:text-sm file:font-semibold
+                      file:bg-blue-600 file:text-white hover:file:bg-blue-700" />
+        <p id="previewImage" class="text-xs text-gray-500 mt-1"></p>
+      </div>
+
+      <!-- Upload File Voice -->
+      <div>
+        <label class="block text-sm font-semibold mb-2 text-gray-700">
+          Upload Suara (Voice)
+        </label>
+        <input type="file" id="voice_file" accept="audio/*" class="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4
+                      file:rounded-lg file:border-0 file:text-sm file:font-semibold
+                      file:bg-green-600 file:text-white hover:file:bg-green-700" />
+        <p id="previewVoice" class="text-xs text-gray-500 mt-1"></p>
       </div>
 
       <!-- Tombol Simpan / Update -->
       <div class="flex items-center gap-3">
-        <button id="btnSubmit" type="submit"
-                class="bg-blue-600 text-white px-5 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+        <button id="btnSubmit" type="submit" class="bg-blue-600 text-white px-5 py-3 rounded-lg font-semibold 
+                       hover:bg-blue-700 transition">
           Simpan Description
         </button>
-        <button id="btnCancel" type="button"
-                class="hidden bg-gray-400 text-white px-5 py-3 rounded-lg font-semibold hover:bg-gray-500 transition">
+
+        <button id="btnCancel" type="button" class="hidden bg-gray-400 text-white px-5 py-3 rounded-lg font-semibold
+                       hover:bg-gray-500 transition">
           Batal
         </button>
       </div>
 
-      <!-- Hidden field untuk ID description (dibutuhkan saat update) -->
+      <!-- Hidden field untuk ID description -->
       <input type="hidden" id="idDescription" />
 
       <p id="hasil" class="mt-2 text-sm font-medium"></p>
@@ -57,6 +86,7 @@
 
     <!-- Tabel Description -->
     <div class="overflow-x-auto bg-white p-6 rounded-xl shadow-md">
+
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-100">
           <tr>
@@ -66,15 +96,19 @@
             <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Aksi</th>
           </tr>
         </thead>
+
         <tbody id="tabelDescription" class="divide-y divide-gray-200 text-gray-700 text-sm">
-          <!-- Data akan di-render oleh JS -->
+          <!-- JS Rendering -->
         </tbody>
       </table>
 
       <!-- Pagination -->
       <div id="pagination" class="flex justify-center mt-4 space-x-2"></div>
+
     </div>
+
   </div>
 
 </body>
+
 </html>
