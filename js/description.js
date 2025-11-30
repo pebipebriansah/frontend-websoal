@@ -63,7 +63,7 @@
       let currentPage = 1;
 
       const showLoading = (msg = "Memuat...") => {
-        tabel.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-blue-600">${msg}</td></tr>`;
+        tabel.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-blue-600">${msg}</td></tr>`;
       };
 
       const renderTable = () => {
@@ -73,7 +73,7 @@
         const pageData = descriptionList.slice(start, end);
 
         if (pageData.length === 0) {
-          tabel.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500">Belum ada data deskripsi.</td></tr>`;
+          tabel.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-gray-500">Belum ada data deskripsi.</td></tr>`;
           pagination.innerHTML = "";
           return;
         }
@@ -85,6 +85,12 @@
               <td class="px-5 py-3">${d.id_description}</td>
               <td class="px-5 py-3 font-medium">${materi ? materi.nama_materi : "-"}</td>
               <td class="px-5 py-3">${d.description}</td>
+              <td class="px-5 py-3">
+                ${d.image_file ? `<img src="${d.image_file}" alt="Image" class="h-16 w-16 object-cover rounded">` : "-"}
+              </td>
+              <td class="px-5 py-3">
+                ${d.voice_file ? `<audio controls src="${d.voice_file}" class="w-full"></audio>` : "-"}
+              </td>
               <td class="px-5 py-3 text-center text-gray-400 text-sm">#${d.id_materi}</td>
             </tr>
           `;
@@ -112,11 +118,11 @@
 
           renderTable();
         } catch (err) {
-          tabel.innerHTML = `<tr><td colspan="4" class="text-center text-red-600">${err.message}</td></tr>`;
+          tabel.innerHTML = `<tr><td colspan="6" class="text-center text-red-600">${err.message}</td></tr>`;
         }
       };
 
-      // 🔹 Preview file
+      // Preview file sebelum submit
       imageFileInput.addEventListener("change", () => {
         const file = imageFileInput.files[0];
         previewImage.textContent = file ? file.name : "Belum ada file yang dipilih";
@@ -127,7 +133,7 @@
         previewVoice.textContent = file ? file.name : "Belum ada file yang dipilih";
       });
 
-      // 🔹 Saat user memilih materi
+      // Pilih materi
       selectMateri.addEventListener("change", () => {
         const selectedId = selectMateri.value;
 
@@ -162,7 +168,7 @@
         }
       });
 
-      // 🔹 Tombol batal
+      // Tombol batal
       btnCancel.addEventListener("click", () => {
         form.reset();
         containerBaru.classList.add("hidden");
@@ -174,7 +180,7 @@
         btnCancel.classList.add("hidden");
       });
 
-      // 🔹 Submit form (simpan / update)
+      // Submit form
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
         hasil.textContent = "";
@@ -190,7 +196,7 @@
           const formData = new FormData();
           formData.append("description", deskripsi);
           if (imageFileInput.files[0]) formData.append("image_file", imageFileInput.files[0]);
-          if (voiceFileInput.files[0]) formData.append("voice", voiceFileInput.files[0]);
+          if (voiceFileInput.files[0]) formData.append("voice_file", voiceFileInput.files[0]);
 
           if (selectedId === "new") {
             const materiRes = await MateriAPI.add(namaMateriBaru.value.trim());
@@ -210,7 +216,7 @@
 
           await loadData();
 
-          // Reset form setelah berhasil
+          // Reset form
           form.reset();
           textarea.value = "";
           idDescription.value = "";
