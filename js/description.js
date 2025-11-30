@@ -24,19 +24,17 @@
       const json = await res.json();
       return json.data || [];
     },
-    add: async (id_materi, description) => {
+    add: async (formData) => {
       const res = await fetch(`${API_BASE}/admin/tambah-description`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id_materi, description }),
+        body: formData,
       });
       return await res.json();
     },
-    update: async (id_description, description) => {
+    update: async (formData) => {
       const res = await fetch(`${API_BASE}/admin/update-description`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id_description, description }),
+        body: formData,
       });
       return await res.json();
     },
@@ -55,6 +53,10 @@
       const btnSubmit = document.getElementById("btnSubmit");
       const btnCancel = document.getElementById("btnCancel");
       const idDescription = document.getElementById("idDescription");
+      const imageFileInput = document.getElementById("image_file");
+      const voiceFileInput = document.getElementById("voice_file");
+      const previewImage = document.getElementById("previewImage");
+      const previewVoice = document.getElementById("previewVoice");
 
       let materiList = [];
       let descriptionList = [];
@@ -114,6 +116,17 @@
         }
       };
 
+      // 🔹 Preview file
+      imageFileInput.addEventListener("change", () => {
+        const file = imageFileInput.files[0];
+        previewImage.textContent = file ? file.name : "Belum ada file yang dipilih";
+      });
+
+      voiceFileInput.addEventListener("change", () => {
+        const file = voiceFileInput.files[0];
+        previewVoice.textContent = file ? file.name : "Belum ada file yang dipilih";
+      });
+
       // 🔹 Saat user memilih materi
       selectMateri.addEventListener("change", () => {
         const selectedId = selectMateri.value;
@@ -131,9 +144,7 @@
 
         containerBaru.classList.add("hidden");
 
-        // Cek apakah materi ini sudah punya deskripsi
         const existing = descriptionList.find(d => d.id_materi === parseInt(selectedId));
-
         if (existing) {
           textarea.value = existing.description;
           idDescription.value = existing.id_description;
@@ -153,9 +164,10 @@
 
       // 🔹 Tombol batal
       btnCancel.addEventListener("click", () => {
-        textarea.value = "";
-        idDescription.value = "";
-        selectMateri.value = "";
+        form.reset();
+        containerBaru.classList.add("hidden");
+        previewImage.textContent = "Belum ada file yang dipilih";
+        previewVoice.textContent = "Belum ada file yang dipilih";
         btnSubmit.textContent = "Simpan Description";
         btnSubmit.classList.remove("bg-green-600");
         btnSubmit.classList.add("bg-blue-600");
@@ -175,14 +187,22 @@
         try {
           showLoading("Menyimpan data...");
 
+          const formData = new FormData();
+          formData.append("description", deskripsi);
+          if (imageFileInput.files[0]) formData.append("image_file", imageFileInput.files[0]);
+          if (voiceFileInput.files[0]) formData.append("voice", voiceFileInput.files[0]);
+
           if (selectedId === "new") {
             const materiRes = await MateriAPI.add(namaMateriBaru.value.trim());
             const id_materi = materiRes.id_materi || materiRes.data?.id_materi;
-            await DescriptionAPI.add(id_materi, deskripsi);
+            formData.append("id_materi", id_materi);
+            await DescriptionAPI.add(formData);
           } else if (idDescription.value) {
-            await DescriptionAPI.update(parseInt(idDescription.value), deskripsi);
+            formData.append("id_description", idDescription.value);
+            await DescriptionAPI.update(formData);
           } else {
-            await DescriptionAPI.add(parseInt(selectedId), deskripsi);
+            formData.append("id_materi", selectedId);
+            await DescriptionAPI.add(formData);
           }
 
           hasil.textContent = "✅ Data berhasil disimpan!";
@@ -194,6 +214,8 @@
           form.reset();
           textarea.value = "";
           idDescription.value = "";
+          previewImage.textContent = "Belum ada file yang dipilih";
+          previewVoice.textContent = "Belum ada file yang dipilih";
           btnSubmit.textContent = "Simpan Description";
           btnSubmit.classList.remove("bg-green-600");
           btnSubmit.classList.add("bg-blue-600");
