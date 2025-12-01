@@ -182,55 +182,81 @@
 
       // Submit form
       form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        hasil.textContent = "";
-        const selectedId = selectMateri.value;
-        const deskripsi = textarea.value.trim();
+    e.preventDefault();
+    hasil.textContent = "";
 
-        if (!selectedId) return (hasil.textContent = "Pilih materi terlebih dahulu!");
-        if (!deskripsi) return (hasil.textContent = "Deskripsi tidak boleh kosong.");
+    const selectedId = selectMateri.value;
+    const deskripsi = textarea.value.trim();
 
-        try {
-          showLoading("Menyimpan data...");
+    if (!selectedId) return hasil.textContent = "Pilih materi terlebih dahulu!";
+    if (!deskripsi) return hasil.textContent = "Deskripsi tidak boleh kosong.";
 
-          const formData = new FormData();
-          formData.append("description", deskripsi);
-          if (imageFileInput.files[0]) formData.append("image_file", imageFileInput.files[0]);
-          if (voiceFileInput.files[0]) formData.append("voice_file", voiceFileInput.files[0]);
+    try {
+        showLoading("Menyimpan data...");
 
-          if (selectedId === "new") {
+        const formData = new FormData();
+        formData.append("description", deskripsi);
+
+        // File opsional
+        if (imageFileInput.files[0]) {
+            formData.append("image_file", imageFileInput.files[0]);
+        } else {
+            formData.append("image_file", "");
+        }
+
+        if (voiceFileInput.files[0]) {
+            formData.append("voice_file", voiceFileInput.files[0]);
+        } else {
+            formData.append("voice_file", "");
+        }
+
+        // === LOGIKA PENYIMPANAN ===
+
+        // 1. Tambah materi baru 
+        if (selectedId === "new") {
             const materiRes = await MateriAPI.add(namaMateriBaru.value.trim());
             const id_materi = materiRes.id_materi || materiRes.data?.id_materi;
+
+            if (!id_materi) throw new Error("ID materi gagal dibuat.");
+
             formData.append("id_materi", id_materi);
             await DescriptionAPI.add(formData);
-          } else if (idDescription.value) {
+        }
+
+        // 2. Update deskripsi lama
+        else if (idDescription.value) {
             formData.append("id_description", idDescription.value);
+            formData.append("id_materi", selectedId);
             await DescriptionAPI.update(formData);
-          } else {
+        }
+
+        // 3. Tambah deskripsi baru untuk materi lama
+        else {
             formData.append("id_materi", selectedId);
             await DescriptionAPI.add(formData);
-          }
-
-          hasil.textContent = "✅ Data berhasil disimpan!";
-          hasil.className = "mt-2 text-green-700 font-medium";
-
-          await loadData();
-
-          // Reset form
-          form.reset();
-          textarea.value = "";
-          idDescription.value = "";
-          previewImage.textContent = "Belum ada file yang dipilih";
-          previewVoice.textContent = "Belum ada file yang dipilih";
-          btnSubmit.textContent = "Simpan Description";
-          btnSubmit.classList.remove("bg-green-600");
-          btnSubmit.classList.add("bg-blue-600");
-          btnCancel.classList.add("hidden");
-        } catch (err) {
-          hasil.textContent = `❌ ${err.message}`;
-          hasil.className = "mt-2 text-red-600 font-medium";
         }
-      });
+
+        hasil.textContent = "✅ Data berhasil disimpan!";
+        hasil.className = "mt-2 text-green-700 font-medium";
+
+        await loadData();
+
+        // reset
+        form.reset();
+        textarea.value = "";
+        idDescription.value = "";
+        previewImage.textContent = "Belum ada file yang dipilih";
+        previewVoice.textContent = "Belum ada file yang dipilih";
+        btnSubmit.textContent = "Simpan Description";
+        btnSubmit.classList.remove("bg-green-600");
+        btnSubmit.classList.add("bg-blue-600");
+        btnCancel.classList.add("hidden");
+
+    } catch (err) {
+        hasil.textContent = `❌ ${err.message}`;
+        hasil.className = "mt-2 text-red-600 font-medium";
+    }
+});
 
       loadData();
     },
