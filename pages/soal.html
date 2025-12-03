@@ -21,6 +21,18 @@
       </div>
     </div>
 
+    <!-- Upload Audio -->
+    <div class="col-span-2">
+      <label class="block text-sm font-medium text-gray-700 mb-1">Upload Audio (Opsional)</label>
+      <input type="file" id="audioSoal" accept="audio/*"
+        class="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-green-500 focus:outline-none transition" />
+
+      <!-- Preview Audio -->
+      <div id="previewAudio" class="mt-3 hidden">
+        <audio id="audioPlayer" controls class="w-full"></audio>
+      </div>
+    </div>
+
     <!-- Opsi -->
     <input type="text" id="opsiA" placeholder="Opsi A"
       class="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
@@ -62,6 +74,7 @@
         <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">ID</th>
         <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Soal</th>
         <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Gambar</th>
+        <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Audio</th>
         <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Opsi A</th>
         <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Opsi B</th>
         <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Opsi C</th>
@@ -74,7 +87,7 @@
 
     <tbody id="tabelSoal" class="divide-y divide-gray-200 text-gray-700 text-sm">
       <tr>
-        <td colspan="10" class="text-center text-gray-500 p-3">Memuat data...</td>
+        <td colspan="11" class="text-center text-gray-500 p-3">Memuat data...</td>
       </tr>
     </tbody>
   </table>
