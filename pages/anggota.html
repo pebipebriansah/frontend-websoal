@@ -1,78 +1,102 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Data Atlet</title>
+
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    window.supabaseClient = window.supabase.createClient(
+      "https://jwtrpjzlewbnqfuqqjfr.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3dHJwanpsZXdibnFmdXFxamZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjU2MTUsImV4cCI6MjA3OTk0MTYxNX0.9toQAPwc7Fm5bW05VOQnkArAKWQFy8Sg8QsdWqVaqCo"
+    );
+  </script>
 </head>
+
 <body class="bg-gray-50 font-sans p-6">
 
   <div class="max-w-6xl mx-auto">
     <h1 class="text-3xl font-bold text-gray-800 text-center mb-8">Data Atlet</h1>
 
-    <!-- Form Input Anggota -->
+    <!-- Form -->
     <form id="formAnggota" class="bg-white p-6 rounded-xl shadow-md mb-6 space-y-5">
       <div class="grid md:grid-cols-2 gap-5">
-        <input type="text" id="nama_anggota" placeholder="Nama Atlet"
-               class="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required />
-        <input type="text" id="username" placeholder="Username"
-               class="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required />
-        <input type="password" id="password" placeholder="Password"
-               class="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required />
-        <select id="jenis_kelamin"
-                class="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required>
+
+        <input id="nama_anggota" type="text" placeholder="Nama Atlet" class="border border-gray-300 rounded-lg p-3"
+          required>
+
+        <input id="username" type="text" placeholder="Username" class="border border-gray-300 rounded-lg p-3" required>
+
+        <input id="password" type="password" placeholder="Password" class="border border-gray-300 rounded-lg p-3"
+          required>
+
+        <select id="jenis_kelamin" class="border border-gray-300 rounded-lg p-3" required>
           <option value="">Jenis Kelamin</option>
           <option value="L">Laki-laki</option>
           <option value="P">Perempuan</option>
         </select>
-        <textarea id="alamat" placeholder="Alamat"
-                  class="border border-gray-300 rounded-lg p-3 col-span-2 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"></textarea>
+
+        <textarea id="alamat" placeholder="Alamat" class="border border-gray-300 rounded-lg p-3 col-span-2"></textarea>
+
       </div>
 
       <button type="submit"
-              class="bg-blue-600 text-white px-5 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+        class="bg-blue-600 text-white px-5 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
         Simpan Atlet
       </button>
 
       <p id="hasilAnggota" class="mt-2 text-sm font-medium"></p>
     </form>
 
-    <!-- Tabel Anggota -->
+    <!-- Table -->
     <div class="overflow-x-auto bg-white p-6 rounded-xl shadow-md">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-100">
           <tr>
-            <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">ID</th>
-            <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Nama</th>
-            <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Username</th>
-            <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Jenis Kelamin</th>
-            <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Alamat</th>
-            <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Aksi</th>
+            <th class="px-5 py-3">ID</th>
+            <th class="px-5 py-3">Nama</th>
+            <th class="px-5 py-3">Username</th>
+            <th class="px-5 py-3">Jenis Kelamin</th>
+            <th class="px-5 py-3">Alamat</th>
+            <th class="px-5 py-3">Aksi</th>
           </tr>
         </thead>
-        <tbody id="tabelAnggota" class="divide-y divide-gray-200 text-gray-700 text-sm">
-          <!-- Data anggota akan di-render oleh JS -->
+        <tbody id="tabelAnggota" class="divide-y divide-gray-200 text-sm">
         </tbody>
       </table>
 
       <!-- Pagination -->
-      <div id="paginationAnggota" class="flex justify-center mt-4 space-x-2"></div>
+      <div id="paginationAnggota" class="flex justify-center mt-4 space-x-2">
+        <!-- Pagination akan dibuat JS -->
+      </div>
     </div>
   </div>
 
-  <!-- Panggil JS eksternal -->
+  <!-- PENTING: load JS setelah HTML selesai -->
   <script src="js/anggota.js"></script>
+
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      // Inisialisasi modul JS dengan pagination
-      if (window.AnggotaModule) {
-        AnggotaModule.init("formAnggota", "tabelAnggota", "hasilAnggota", "paginationAnggota");
+    window.addEventListener("load", () => {
+      if (window.AnggotaModule && typeof window.AnggotaModule.init === "function") {
+        window.AnggotaModule.init(
+          "formAnggota",
+          "tabelAnggota",
+          "hasilAnggota",
+          "paginationAnggota"
+        );
       } else {
-        console.error("AnggotaModule tidak ditemukan di js/anggota.js");
+        console.error("AnggotaModule tidak ditemukan!");
       }
     });
   </script>
 
 </body>
+
 </html>

@@ -1,31 +1,36 @@
 (() => {
-  const API_BASE = "https://84fcb76e-ab21-4692-94c1-a86c2b92b808-00-2rnc2uogakcb7.pike.replit.dev";
+  const db = window.supabaseClient;
+
+  if (!db) {
+    console.error("Supabase client tidak ditemukan.");
+    window.AnggotaModule = { init: () => alert("Supabase belum diinisialisasi!") };
+    return;
+  }
 
   let anggotaList = [];
   let currentPage = 1;
-  const perPage = 5; // jumlah data per halaman
+  const perPage = 5;
 
   const AnggotaAPI = {
     getAll: async () => {
-      const res = await fetch(`${API_BASE}/admin/anggota`);
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-      const json = await res.json();
-      if (!json.data || !Array.isArray(json.data)) throw new Error("Response API tidak sesuai format");
-      return json.data;
+      const { data, error } = await db.from("tbl_anggota")
+        .select("*")
+        .order("id_anggota", { ascending: true });
+
+      if (error) throw error;
+      return data || [];
     },
-    add: async (anggotaData) => {
-      const res = await fetch(`${API_BASE}/anggota/tambah`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(anggotaData)
-      });
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-      return await res.json();
+
+    add: async (payload) => {
+      const { data, error } = await db.from("tbl_anggota").insert(payload).select().single();
+      if (error) throw error;
+      return data;
     },
+
     delete: async (id) => {
-      const res = await fetch(`${API_BASE}/admin/anggota/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-      return await res.json();
+      const { error } = await db.from("tbl_anggota").delete().eq("id_anggota", id);
+      if (error) throw error;
+      return true;
     }
   };
 
@@ -36,150 +41,164 @@
       const hasil = document.getElementById(hasilId);
       const pagination = document.getElementById(paginationId);
 
-      if (!form || !tabel || !hasil) {
-        console.error("Form, tabel, atau hasil tidak ditemukan!");
+      // ---------------------------
+      // VALIDASI ID (PERBAIKAN)
+      // ---------------------------
+      if (!paginationId) {
+        console.error("paginationId belum diberikan ke .init()!");
+      }
+
+      if (!form) console.error("Form tidak ditemukan:", formId);
+      if (!tabel) console.error("Tabel tidak ditemukan:", tabelId);
+      if (!hasil) console.error("Hasil tidak ditemukan:", hasilId);
+      if (!pagination) console.error("Pagination tidak ditemukan:", paginationId);
+
+      if (!form || !tabel || !hasil || !pagination) {
         return;
       }
 
-      const showLoading = (message = "Memuat data...") => {
-        tabel.innerHTML = `
-          <tr>
-            <td colspan="6" class="px-4 py-6 text-center">
-              <div class="flex flex-col items-center justify-center space-y-2">
-                <svg class="animate-spin h-8 w-8 text-blue-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                </svg>
-                <span class="text-blue-700 font-medium">${message}</span>
-              </div>
-            </td>
-          </tr>
-        `;
+      // -------------------------
+      // FIX TOTAL → gunakan ID
+      // -------------------------
+      const namaField = document.getElementById("nama_anggota");
+      const usernameField = document.getElementById("username");
+      const passwordField = document.getElementById("password");
+      const jenisField = document.getElementById("jenis_kelamin");
+      const alamatField = document.getElementById("alamat");
+
+      const escapeHtml = (str) =>
+        String(str || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+
+      const setResult = (msg, ok = true) => {
+        hasil.textContent = msg;
+        hasil.className =
+          ok
+            ? "mt-2 text-sm font-medium text-green-600"
+            : "mt-2 text-sm font-medium text-red-600";
       };
 
-      // --- Render tabel berdasarkan halaman ---
+      const showLoading = (msg = "Memuat...") => {
+        tabel.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center py-4">${msg}</td>
+          </tr>`;
+      };
+
       const render = () => {
-        const totalPages = Math.ceil(anggotaList.length / perPage);
+        const totalPages = Math.max(1, Math.ceil(anggotaList.length / perPage));
+
+        if (currentPage > totalPages) currentPage = totalPages;
+
         const start = (currentPage - 1) * perPage;
-        const end = start + perPage;
-        const pageData = anggotaList.slice(start, end);
+        const pageData = anggotaList.slice(start, start + perPage);
 
         if (pageData.length === 0) {
           tabel.innerHTML = `
             <tr>
-              <td colspan="6" class="px-4 py-4 text-center text-gray-500">Belum ada data anggota.</td>
-            </tr>
-          `;
+              <td colspan="6" class="text-center py-4 text-gray-500">Belum ada data</td>
+            </tr>`;
           pagination.innerHTML = "";
           return;
         }
 
-        tabel.innerHTML = pageData.map(a => `
-          <tr class="hover:bg-gray-50 transition">
-            <td class="px-4 py-2">${a.id_anggota}</td>
-            <td class="px-4 py-2">${a.nama_anggota}</td>
-            <td class="px-4 py-2">${a.username}</td>
-            <td class="px-4 py-2">${a.jenis_kelamin}</td>
-            <td class="px-4 py-2">${a.alamat}</td>
-            <td class="px-4 py-2 text-center">
-              <button class="bg-red-600 text-white px-3 py-1 rounded btn-delete" data-id="${a.id_anggota}">
-                Hapus
-              </button>
-            </td>
-          </tr>
-        `).join('');
+        tabel.innerHTML = pageData
+          .map(
+            (a) => `
+            <tr>
+              <td class="px-4 py-2">${a.id_anggota}</td>
+              <td class="px-4 py-2">${escapeHtml(a.nama_anggota)}</td>
+              <td class="px-4 py-2">${escapeHtml(a.username)}</td>
+              <td class="px-4 py-2">${escapeHtml(a.jenis_kelamin)}</td>
+              <td class="px-4 py-2">${escapeHtml(a.alamat)}</td>
+              <td class="px-4 py-2">
+                <button class="btn-delete bg-red-600 text-white px-3 py-1 rounded" data-id="${a.id_anggota}">
+                  Hapus
+                </button>
+              </td>
+            </tr>`
+          )
+          .join("");
 
-        renderPagination(totalPages);
-      };
-
-      // --- Render tombol pagination ---
-      const renderPagination = (totalPages) => {
-        if (!pagination) return;
-        if (totalPages <= 1) {
-          pagination.innerHTML = "";
-          return;
-        }
-
-        let html = "";
-
+        // -------------------------
+        // PAGINATION (Sudah FIX)
+        // -------------------------
+        pagination.innerHTML = "";
         for (let i = 1; i <= totalPages; i++) {
-          html += `<button class="px-3 py-1 rounded ${i === currentPage ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'}" data-page="${i}">${i}</button>`;
-        }
+          const btn = document.createElement("button");
+          btn.textContent = i;
+          btn.dataset.page = i;
+          btn.className =
+            "px-3 py-1 rounded " +
+            (i === currentPage ? "bg-blue-600 text-white" : "bg-gray-300");
 
-        pagination.innerHTML = html;
-
-        pagination.querySelectorAll("button").forEach(btn => {
-          btn.addEventListener("click", () => {
-            currentPage = parseInt(btn.dataset.page);
+          btn.onclick = () => {
+            currentPage = i;
             render();
-          });
-        });
+          };
+
+          pagination.appendChild(btn);
+        }
       };
 
-      // --- Delegasi tombol hapus ---
       tabel.addEventListener("click", async (e) => {
-        if (!e.target.classList.contains("btn-delete")) return;
-        const id = e.target.dataset.id;
-        if (!confirm(`Hapus anggota dengan ID ${id}?`)) return;
+        const btn = e.target.closest(".btn-delete");
+        if (!btn) return;
 
-        try {
-          showLoading("Menghapus anggota...");
-          const json = await AnggotaAPI.delete(id);
-          anggotaList = anggotaList.filter(a => a.id_anggota != id);
-          // jika halaman terakhir kosong, pindah ke halaman sebelumnya
-          const totalPages = Math.ceil(anggotaList.length / perPage);
-          if (currentPage > totalPages) currentPage = totalPages || 1;
-          render();
-          hasil.textContent = json.message || `Anggota dengan ID ${id} berhasil dihapus.`;
-          hasil.className = "text-green-700 mt-2 font-medium";
-        } catch (err) {
-          console.error("Gagal menghapus anggota:", err);
-          hasil.textContent = `Error: ${err.message}`;
-          hasil.className = "text-red-600 mt-2 font-medium";
-        }
+        const id = btn.dataset.id;
+        if (!confirm(`Hapus anggota ID ${id}?`)) return;
+
+        showLoading("Menghapus...");
+
+        await AnggotaAPI.delete(id);
+        anggotaList = anggotaList.filter((a) => a.id_anggota != id);
+
+        render();
+        setResult("Berhasil menghapus!", true);
       });
 
       const loadData = async () => {
+        showLoading();
         try {
-          showLoading();
           anggotaList = await AnggotaAPI.getAll();
+          currentPage = 1;
           render();
         } catch (err) {
-          console.error("Gagal memuat data anggota:", err);
           tabel.innerHTML = `<tr><td colspan="6" class="text-center text-red-600">${err.message}</td></tr>`;
         }
       };
 
-      // --- Tambah anggota ---
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
-        const anggotaData = {
-          nama_anggota: form.querySelector("#nama_anggota").value,
-          alamat: form.querySelector("#alamat").value,
-          jenis_kelamin: form.querySelector("#jenis_kelamin").value,
-          username: form.querySelector("#username").value,
-          password: form.querySelector("#password").value
+
+        const payload = {
+          nama_anggota: namaField.value.trim(),
+          username: usernameField.value.trim(),
+          password: passwordField.value.trim(),
+          jenis_kelamin: jenisField.value,
+          alamat: alamatField.value.trim()
         };
+
+        if (!payload.nama_anggota || !payload.username || !payload.password) {
+          setResult("Semua field harus diisi!", false);
+          return;
+        }
+
+        showLoading("Menyimpan...");
+
         try {
-          showLoading("Menambahkan anggota...");
-          const json = await AnggotaAPI.add(anggotaData);
-          anggotaList.push({
-            id_anggota: json.id_anggota || Date.now(),
-            nama_anggota: json.nama_anggota || anggotaData.nama_anggota,
-            username: json.username || anggotaData.username,
-            jenis_kelamin: anggotaData.jenis_kelamin,
-            alamat: anggotaData.alamat
-          });
-          // jika halaman terakhir penuh, pindah ke halaman terakhir
+          const inserted = await AnggotaAPI.add(payload);
+          anggotaList.push(inserted);
+          anggotaList.sort((a, b) => a.id_anggota - b.id_anggota);
+
           currentPage = Math.ceil(anggotaList.length / perPage);
           render();
-          hasil.textContent = "Anggota berhasil ditambahkan!";
-          hasil.className = "text-green-700 mt-2 font-medium";
+          setResult("Berhasil menambah atlet!", true);
           form.reset();
         } catch (err) {
-          console.error("Gagal menambah anggota:", err);
-          hasil.textContent = `Error: ${err.message}`;
-          hasil.className = "text-red-600 mt-2 font-medium";
+          setResult("Gagal menambah: " + err.message, false);
         }
       });
 

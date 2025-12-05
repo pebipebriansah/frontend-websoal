@@ -1,8 +1,19 @@
 (() => {
-  const API_BASE = "https://84fcb76e-ab21-4692-94c1-a86c2b92b808-00-2rnc2uogakcb7.pike.replit.dev";
+
+  // Pastikan supabase tersedia
+  if (typeof supabase === "undefined") {
+    console.error("Supabase belum terload! Pastikan CDN dimuat sebelum file ini.");
+    return;
+  }
+
+  const supabaseClient = supabase.createClient(
+    "https://jwtrpjzlewbnqfuqqjfr.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3dHJwanpsZXdibnFmdXFxamZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjU2MTUsImV4cCI6MjA3OTk0MTYxNX0.9toQAPwc7Fm5bW05VOQnkArAKWQFy8Sg8QsdWqVaqCo"
+  );
 
   const DashboardModule = {
     init: async () => {
+
       const anggotaEl = document.getElementById("totalAnggota");
       const soalEl = document.getElementById("totalSoal");
       const rataEl = document.getElementById("rataNilai");
@@ -13,23 +24,47 @@
       }
 
       try {
-        // Ambil total anggota
-        const resAnggota = await fetch(`${API_BASE}/admin/statistik/anggota`);
-        const dataAnggota = await resAnggota.json();
-        anggotaEl.textContent = dataAnggota.total_anggota ?? 0;
+        // ============================
+        // 1. TOTAL ANGGOTA
+        // ============================
+        const { count: countAnggota, error: errAnggota } =
+          await supabaseClient
+            .from("tbl_anggota")
+            .select("*", { count: "exact", head: true });
 
-        // Ambil total soal
-        const resSoal = await fetch(`${API_BASE}/admin/statistik/soal`);
-        const dataSoal = await resSoal.json();
-        soalEl.textContent = dataSoal.total_soal ?? 0;
+        if (errAnggota) console.error(errAnggota);
+        anggotaEl.textContent = countAnggota ?? 0;
 
-        // Ambil rata-rata nilai
-        const resNilai = await fetch(`${API_BASE}/admin/statistik/nilai`);
-        const dataNilai = await resNilai.json();
-        rataEl.textContent = Math.round(dataNilai.rata_rata_nilai ?? 0);
+        // ============================
+        // 2. TOTAL SOAL
+        // ============================
+        const { count: countSoal, error: errSoal } =
+          await supabaseClient
+            .from("tbl_soal")
+            .select("*", { count: "exact", head: true });
 
-      } catch (err) {
-        console.error("Gagal memuat data dashboard:", err);
+        if (errSoal) console.error(errSoal);
+        soalEl.textContent = countSoal ?? 0;
+
+        // ============================
+        // 3. RATA-RATA NILAI
+        // ============================
+        const { data: nilaiData, error: errNilai } =
+          await supabaseClient
+            .from("tbl_nilai")
+            .select("nilai_pengerjaan");
+
+        if (errNilai) console.error(errNilai);
+
+        if (!nilaiData?.length) {
+          rataEl.textContent = 0;
+        } else {
+          const total = nilaiData.reduce((sum, n) => sum + n.nilai_pengerjaan, 0);
+          rataEl.textContent = Math.round(total / nilaiData.length);
+        }
+
+      } catch (error) {
+        console.error("Gagal memuat data dashboard:", error);
         anggotaEl.textContent = "-";
         soalEl.textContent = "-";
         rataEl.textContent = "-";

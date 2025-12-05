@@ -1,30 +1,44 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard Aplikasi</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      "https://jwtrpjzlewbnqfuqqjfr.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3dHJwanpsZXdibnFmdXFxamZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjU2MTUsImV4cCI6MjA3OTk0MTYxNX0.9toQAPwc7Fm5bW05VOQnkArAKWQFy8Sg8QsdWqVaqCo"
+    );
+
+    // Supaya dipakai file lain:
+    window.supabaseClient = supabaseClient;
+  </script>
   <style>
     /* Custom styles untuk perbaikan tampilan */
     .sidebar-item {
       transition: all 0.2s ease;
       border-left: 3px solid transparent;
     }
+
     .sidebar-item:hover {
       background-color: rgba(255, 255, 255, 0.1);
       border-left-color: #ffffff;
     }
+
     .sidebar-item.active {
       background-color: rgba(255, 255, 255, 0.15);
       border-left-color: #ffffff;
     }
+
     .table-container {
       max-height: 70vh;
       overflow-y: auto;
     }
+
     @media (max-width: 768px) {
       .table-container {
         overflow-x: auto;
@@ -70,7 +84,8 @@
           <p class="text-xs text-blue-200">Administrator</p>
         </div>
       </div>
-      <button onclick="logout()" class="w-full bg-blue-700 hover:bg-blue-600 px-3 py-2.5 rounded transition flex items-center justify-center">
+      <button onclick="logout()"
+        class="w-full bg-blue-700 hover:bg-blue-600 px-3 py-2.5 rounded transition flex items-center justify-center">
         <i class="fa-solid fa-right-from-bracket mr-2"></i> Logout
       </button>
     </div>
@@ -81,11 +96,12 @@
     <!-- Konten akan dimuat di sini -->
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Script -->
   <script src="js/main.js"></script>
   <script src="js/soal.js"></script>
   <script src="js/nilai.js"></script>
-  <script src="js/anggota.js"></script>
+  <script src="js/anggota.js" defer></script>
   <script src="js/description.js"></script>
   <script>
     // Muat halaman home saat pertama kali dibuka
@@ -94,6 +110,5 @@
     });
   </script>
 </body>
+
 </html>
-
-

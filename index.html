@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login Aplikasi</title>
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
 
-  <!-- Kartu Login -->
   <div class="bg-white p-8 rounded-2xl shadow-lg w-full max-w-sm">
     <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Masuk ke Sistem</h2>
 
@@ -16,13 +20,15 @@
       <div>
         <label class="block mb-1 text-gray-600">Username</label>
         <input id="username" type="text" placeholder="Masukkan username"
-          class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none" required />
+          class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          required />
       </div>
 
       <div>
         <label class="block mb-1 text-gray-600">Password</label>
         <input id="password" type="password" placeholder="••••••••"
-          class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none" required />
+          class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          required />
       </div>
 
       <button type="submit"
@@ -33,8 +39,19 @@
   </div>
 
   <script>
+    // =============================
+    // Inisialisasi Supabase v2
+    // =============================
+    const { createClient } = supabase;
+
+    const supabaseClient = createClient(
+      "https://jwtrpjzlewbnqfuqqjfr.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3dHJwanpsZXdibnFmdXFxamZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjU2MTUsImV4cCI6MjA3OTk0MTYxNX0.9toQAPwc7Fm5bW05VOQnkArAKWQFy8Sg8QsdWqVaqCo"
+    );
+
     const form = document.getElementById('loginForm');
     const message = document.getElementById('message');
+
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -45,41 +62,43 @@
       message.textContent = 'Sedang memproses...';
       message.className = 'text-center mt-4 text-gray-700';
 
-      try {
-        // Ganti URL dengan URL FastAPI kamu
-        const apiUrl = 'https://84fcb76e-ab21-4692-94c1-a86c2b92b808-00-2rnc2uogakcb7.pike.replit.dev/admin/login';
+      // =============================
+      // Query ke Supabase
+      // =============================
+      const { data, error } = await supabaseClient
+        .from('tbl_user')
+        .select('*')
+        .eq('username', username)
+        .eq('password', password)
+        .maybeSingle();
 
-        const res = await fetch(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-          message.className = 'text-center mt-4 text-green-600';
-          message.textContent = data.message || 'Login berhasil!';
-
-          // Simpan info user di localStorage
-          localStorage.setItem('id_user', data.id_user);
-          localStorage.setItem('username', data.username);
-
-          // Redirect ke dashboard
-          setTimeout(() => {
-            window.location.href = 'dashboard.html';
-          }, 1200);
-        } else {
-          message.className = 'text-center mt-4 text-red-600';
-          message.textContent = data.message || 'Username atau password salah!';
-        }
-
-      } catch (err) {
-        console.error(err);
-        message.className = 'text-center mt-4 text-red-600';
-        message.textContent = 'Tidak dapat terhubung ke server. Pastikan backend FastAPI aktif dan CORS sudah diaktifkan.';
+      if (error) {
+        console.error(error);
+        message.className = "text-center mt-4 text-red-600";
+        message.textContent = "Terjadi kesalahan saat mengakses database";
+        return;
       }
+
+      if (!data) {
+        message.className = "text-center mt-4 text-red-600";
+        message.textContent = "Username atau password salah!";
+        return;
+      }
+
+      // =============================
+      // Login Berhasil
+      // =============================
+      message.className = "text-center mt-4 text-green-600";
+      message.textContent = "Login berhasil!";
+
+      localStorage.setItem("id_user", data.id_user);
+      localStorage.setItem("username", data.username);
+
+      setTimeout(() => {
+        window.location.href = "dashboard.html";
+      }, 1200);
     });
   </script>
 </body>
+
 </html>

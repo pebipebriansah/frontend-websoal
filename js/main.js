@@ -75,7 +75,7 @@ async function loadPage(page) {
 
         case 'anggota':
           if (typeof AnggotaModule !== 'undefined') {
-            AnggotaModule.init("formAnggota", "tabelAnggota", "hasilAnggota");
+            AnggotaModule.init("formAnggota", "tabelAnggota", "hasilAnggota", "paginationAnggota");
           }
           break;
 

@@ -1,29 +1,35 @@
-<h1 class="text-2xl font-bold mb-4">Data Nilai Praktik</h1>
+<h1 class="text-2xl font-bold mb-6 text-gray-800">Data Nilai Praktik</h1>
 
 <!-- Tabel Data Nilai Siswa -->
-<div class="bg-white rounded-lg shadow overflow-x-auto">
-  <table class="w-full text-sm text-left border border-gray-300">
-    <thead class="bg-gray-100 text-gray-700">
-  <tr>
-    <th class="border p-2">No</th>
-    <th class="border p-2">Nama Anggota</th>
-    <th class="border p-2">Nilai Pengerjaan</th>
-    <th class="border p-2">Keseimbangan<br><small>(Dapat diubah)</small></th>
-    <th class="border p-2">Kekuatan<br><small>(Dapat diubah)</small></th>
-    <th class="border p-2">Ketahanan<br><small>(Dapat diubah)</small></th>
-    <th class="border p-2">Keterangan<br><small>(Dapat diubah)</small></th>
-    <th class="border p-2">Waktu Pengerjaan</th>
-    <th class="border p-2">Status</th>
-    <th class="border p-2">Aksi</th>
-  </tr>
-</thead>
-
-    <tbody id="tabelNilai" class="text-gray-800">
-      <tr>
-        <td colspan="10" class="text-center text-gray-500 p-2">Memuat data...</td>
-      </tr>
-    </tbody>
-  </table>
+<div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm text-left">
+      <thead class="bg-gray-50 text-gray-700 uppercase">
+        <tr>
+          <th class="p-4 text-center border-r">No</th>
+          <th class="p-4 border-r">Nama Anggota</th>
+          <th class="p-4 text-center border-r">Nilai Pengerjaan</th>
+          <th class="p-4 border-r">Waktu Pengerjaan</th>
+          <th class="p-4 text-center border-r">Status</th>
+          <th class="p-4 text-center">Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="tabelNilai" class="text-gray-800">
+        <tr>
+          <td colspan="6" class="text-center text-gray-500 p-8">
+            <div class="flex flex-col items-center justify-center">
+              <svg class="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                </path>
+              </svg>
+              <span>Memuat data nilai...</span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <!-- Memanggil script NilaiModule -->

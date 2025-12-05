@@ -1,533 +1,382 @@
 (() => {
-  // ----- Config -----
-  const API_BASE = "https://84fcb76e-ab21-4692-94c1-a86c2b92b808-00-2rnc2uogakcb7.pike.replit.dev";
-  const ENDPOINT_LIST = `${API_BASE}/admin/soal`;
-  const ENDPOINT_TAMBAH = `${API_BASE}/admin/tambah`;
-  const ENDPOINT_HAPUS = (id) => `${API_BASE}/admin/soal/${id}`;
 
-  // ----- State -----
+  // -------------------------------
+  // Supabase init
+  // -------------------------------
+  const supabase = window.supabase.createClient(
+    "https://jwtrpjzlewbnqfuqqjfr.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3dHJwanpsZXdibnFmdXFxamZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjU2MTUsImV4cCI6MjA3OTk0MTYxNX0.9toQAPwc7Fm5bW05VOQnkArAKWQFy8Sg8QsdWqVaqCo"
+  );
+
+  const TABLE = "tbl_soal";
+  const BUCKET = "soal";
+
+  // -------------------------------
+  // State
+  // -------------------------------
   let dataSoal = [];
   let currentPage = 1;
   let itemsPerPage = 10;
   let totalPages = 1;
 
-  // ----- Util / UI helpers -----
-  function query(id) { return document.getElementById(id); }
+  // -------------------------------
+  // Helper
+  // -------------------------------
+  const $ = (id) => document.getElementById(id);
 
-  function showLoading(tabel, message = "Memuat soal...") {
-    if (!tabel) return;
-    // colspan = 11 (ID, Soal, Gambar, Audio, Opsi A, Opsi B, Opsi C, Opsi D, Bobot, Opsi Benar, Aksi)
-    tabel.innerHTML = `
-      <tr>
-        <td colspan="11" class="px-4 py-6 text-center">
-          <div class="flex flex-col items-center justify-center space-y-2">
-            <svg class="animate-spin h-8 w-8 text-blue-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-            </svg>
-            <span class="text-blue-700 font-medium">${message}</span>
-          </div>
-        </td>
-      </tr>
-    `;
-  }
-
-  function formatCellText(text, maxLen = 200) {
-    if (text == null) return "-";
-    const s = String(text);
-    if (s.length <= maxLen) return escapeHtml(s);
-    return escapeHtml(s.slice(0, maxLen)) + '...';
-  }
-
-  function escapeHtml(unsafe = "") {
-    return String(unsafe)
+  function escapeHtml(str = "") {
+    return str
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+      .replace(/>/g, "&gt;");
   }
 
-  // ----- Pagination helpers -----
-  function calculatePagination() {
-    totalPages = Math.max(1, Math.ceil(dataSoal.length / itemsPerPage));
-    if (currentPage > totalPages) currentPage = totalPages;
-  }
-
-  function getCurrentPageData() {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return dataSoal.slice(startIndex, endIndex);
-  }
-
-  // ----- Fetch list -----
-  async function fetchSoal(tabel) {
-    if (!tabel) return;
-    showLoading(tabel);
+  // -------------------------------
+  // Upload file to Supabase storage - DIUBAH
+  // -------------------------------
+  async function uploadFile(file, folder) {
+    if (!file) {
+      console.log(`File ${folder} kosong, mengembalikan null`);
+      return null;
+    }
 
     try {
-      const res = await fetch(ENDPOINT_LIST);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
+      console.log(`Memulai upload ${folder}:`, file.name, file.type, file.size);
 
-      if (!json.data || !Array.isArray(json.data)) {
-        console.warn("Response tidak punya .data array, mencoba gunakan root array");
-        // fallback: if root is array
-        if (Array.isArray(json)) {
-          mapAndSetData(json);
-        } else {
-          throw new Error("Response API tidak sesuai format");
+      // Validasi folder
+      const validFolder = folder.toLowerCase();
+      const fileName = `${validFolder}/${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2, 10)}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+
+      console.log(`Mengupload ke: ${fileName}`);
+
+      // Upload file
+      const { data, error } = await supabase.storage
+        .from(BUCKET)
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) {
+        console.error(`Error upload ${folder}:`, error);
+        
+        // Coba hapus spasi atau karakter aneh
+        if (error.message.includes('Invalid character')) {
+          const safeFileName = `${validFolder}/${Date.now()}-${Math.random()
+            .toString(36)
+            .substring(2, 10)}.${file.name.split('.').pop()}`;
+          
+          console.log(`Mencoba upload dengan nama aman: ${safeFileName}`);
+          
+          const { data: retryData, error: retryError } = await supabase.storage
+            .from(BUCKET)
+            .upload(safeFileName, file);
+            
+          if (retryError) {
+            console.error(`Gagal upload setelah retry:`, retryError);
+            return null;
+          }
+          
+          console.log(`Upload berhasil setelah retry:`, retryData);
+          
+          // Get public URL
+          const { data: urlData } = supabase.storage
+            .from(BUCKET)
+            .getPublicUrl(safeFileName);
+            
+          console.log(`Public URL:`, urlData.publicUrl);
+          return urlData.publicUrl;
         }
-      } else {
-        mapAndSetData(json.data);
+        
+        return null;
       }
 
-      calculatePagination();
-      renderSoal(tabel);
-      renderPagination();
-    } catch (err) {
-      console.error("Gagal memuat data soal:", err);
-      tabel.innerHTML = `
-        <tr>
-          <td colspan="11" class="text-center text-red-600 p-2">
-            Gagal memuat data soal. Lihat console untuk detail.
-          </td>
-        </tr>
-      `;
+      console.log(`Upload sukses:`, data);
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from(BUCKET)
+        .getPublicUrl(fileName);
+
+      console.log(`Public URL untuk ${folder}:`, urlData.publicUrl);
+      return urlData.publicUrl;
+
+    } catch (error) {
+      console.error(`Exception saat upload ${folder}:`, error);
+      return null;
     }
   }
 
-  function mapAndSetData(arr) {
-    dataSoal = arr.map(item => {
-      // normalize common fields, be defensive with field names
-      const image_raw = item.image_file ?? item.image_url ?? item.image ?? null;
-      const voice_raw = item.voice_file ?? item.audio_file ?? item.voice ?? null;
+  // -------------------------------
+  // Ambil data dari Supabase
+  // -------------------------------
+  async function loadData() {
+    const tabel = $("tabelSoal");
+    tabel.innerHTML = `<tr><td colspan="11" class="text-center p-4">Memuat...</td></tr>`;
 
-      return {
-        id_soal: item.id_soal ?? item.id ?? null,
-        soal: item.soal ?? item.question ?? "",
-        opsiA: item.opsi_a ?? item.opsiA ?? "",
-        opsiB: item.opsi_b ?? item.opsiB ?? "",
-        opsiC: item.opsi_c ?? item.opsiC ?? "",
-        opsiD: item.opsi_d ?? item.opsiD ?? "",
-        bobot: Number(item.bobot_nilai ?? item.bobot ?? 0),
-        opsiBenar: item.opsi_benar ?? item.opsiBenar ?? "",
-        // image: API might return a direct URL or a filename; keep original
-        image_raw: image_raw,
-        // convenience: if image_raw looks like a full URL use it, else null (backend should ideally send URL)
-        image_url: isProbablyUrl(image_raw) ? image_raw : null,
-        // audio / voice
-        voice_raw: voice_raw,
-        voice_url: isProbablyUrl(voice_raw) ? voice_raw : null
-      };
-    });
-  }
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select("*")
+      .order("id_soal", { ascending: false });
 
-  function isProbablyUrl(v) {
-    if (!v) return false;
-    return /^https?:\/\//i.test(v) || /^\/uploads\//i.test(v);
-  }
-
-  // ----- Render table -----
-  function renderSoal(tabel) {
-    if (!tabel) return;
-
-    const currentData = getCurrentPageData();
-
-    if (currentData.length === 0) {
-      tabel.innerHTML = `
-        <tr>
-          <td colspan="11" class="text-center text-gray-500 p-4">
-            ${dataSoal.length === 0 ? 'Belum ada soal.' : 'Tidak ada data untuk halaman ini.'}
-          </td>
-        </tr>
-      `;
+    if (error) {
+      console.error("Error loading data:", error);
+      tabel.innerHTML = `<tr><td colspan="11" class="text-red-600 text-center p-4">Gagal memuat data</td></tr>`;
       return;
     }
 
-    tabel.innerHTML = currentData.map((item, i) => {
-      const globalIndex = (currentPage - 1) * itemsPerPage + i + 1;
-      const soalShort = formatCellText(item.soal, 220);
+    console.log("Data loaded:", data);
+    dataSoal = data;
+    totalPages = Math.max(1, Math.ceil(dataSoal.length / itemsPerPage));
 
-      // choose image src: image_url (if provided) else if image_raw seems base64 / data URL show it, else empty
-      let imgHtml = '-';
-      if (item.image_url) {
-        imgHtml = `<img src="${escapeHtml(item.image_url)}" alt="gambar" class="w-28 h-20 object-cover rounded" />`;
-      } else if (typeof item.image_raw === 'string' && item.image_raw.startsWith('data:image')) {
-        imgHtml = `<img src="${escapeHtml(item.image_raw)}" alt="gambar" class="w-28 h-20 object-cover rounded" />`;
-      }
+    renderTable();
+    renderPagination();
+  }
 
-      // audio html
-      let audioHtml = '-';
-      if (item.voice_url) {
-        // use <audio> control; make width limited
-        audioHtml = `<audio controls class="w-40"><source src="${escapeHtml(item.voice_url)}"></audio>`;
-      } else if (typeof item.voice_raw === 'string' && item.voice_raw.startsWith('data:audio')) {
-        audioHtml = `<audio controls class="w-40"><source src="${escapeHtml(item.voice_raw)}"></audio>`;
-      }
+  // -------------------------------
+  // Render table
+  // -------------------------------
+  function renderTable() {
+    const tabel = $("tabelSoal");
 
-      return `
-        <tr class="hover:bg-gray-50 align-top">
-          <td class="border p-2 text-center align-top">${globalIndex}</td>
-          <td class="border p-2 align-top">${soalShort}</td>
-          <td class="border p-2 text-center align-top">${imgHtml}</td>
-          <td class="border p-2 text-center align-top">${audioHtml}</td>
-          <td class="border p-2 align-top">${escapeHtml(item.opsiA)}</td>
-          <td class="border p-2 align-top">${escapeHtml(item.opsiB)}</td>
-          <td class="border p-2 align-top">${escapeHtml(item.opsiC)}</td>
-          <td class="border p-2 align-top">${escapeHtml(item.opsiD)}</td>
-          <td class="border p-2 text-center align-top">${item.bobot}</td>
-          <td class="border p-2 text-center align-top font-semibold">${escapeHtml(item.opsiBenar)}</td>
-          <td class="border p-2 text-center align-top">
-            <button class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition-colors"
-                    onclick="hapusSoal(${item.id_soal})">
+    const start = (currentPage - 1) * itemsPerPage;
+    const pageData = dataSoal.slice(start, start + itemsPerPage);
+
+    if (pageData.length === 0) {
+      tabel.innerHTML = `<tr><td colspan="11" class="text-center p-4 text-gray-500">Belum ada data</td></tr>`;
+      return;
+    }
+
+    tabel.innerHTML = pageData
+      .map((item) => {
+        return `
+        <tr class="hover:bg-gray-50">
+          <td class="px-3 py-2">${item.id_soal}</td>
+          <td class="px-3 py-2">${escapeHtml(item.soal)}</td>
+          <td class="px-3 py-2">
+            ${item.image_file ? `<img src="${item.image_file}" class="w-20 h-20 object-cover rounded" />` : "-"}
+          </td>
+          <td class="px-3 py-2">
+            ${item.voice_file ? `<audio controls class="w-32"><source src="${item.voice_file}"></audio>` : "-"}
+          </td>
+          <td class="px-3 py-2">${item.opsi_a}</td>
+          <td class="px-3 py-2">${item.opsi_b}</td>
+          <td class="px-3 py-2">${item.opsi_c}</td>
+          <td class="px-3 py-2">${item.opsi_d}</td>
+          <td class="px-3 py-2">${item.bobot_nilai}</td>
+          <td class="px-3 py-2 font-semibold">${item.opsi_benar}</td>
+          <td class="px-3 py-2">
+            <button onclick="hapusSoal(${item.id_soal})" class="bg-red-600 text-white px-3 py-1 rounded">
               Hapus
             </button>
           </td>
-        </tr>
-      `;
-    }).join('');
+        </tr>`;
+      })
+      .join("");
   }
 
-  // ----- Render pagination -----
+  // -------------------------------
+  // Pagination
+  // -------------------------------
   function renderPagination() {
-    const paginationContainer = query('pagination');
-    if (!paginationContainer) return;
+    const box = $("pagination");
+    box.innerHTML = "";
 
-    if (totalPages <= 1) {
-      paginationContainer.innerHTML = '';
-      return;
-    }
+    if (totalPages <= 1) return;
 
-    let paginationHTML = `
-      <div class="flex items-center justify-between mt-4 w-full">
-        <div class="flex items-center space-x-4">
-          <span class="text-sm text-gray-700">
-            Menampilkan ${Math.min(itemsPerPage, dataSoal.length - (currentPage - 1) * itemsPerPage)} dari ${dataSoal.length} soal
-          </span>
-          <select id="itemsPerPage" class="border rounded px-2 py-1 text-sm" onchange="changeItemsPerPage(this.value)">
-            <option value="10" ${itemsPerPage === 10 ? 'selected' : ''}>10 per halaman</option>
-            <option value="15" ${itemsPerPage === 15 ? 'selected' : ''}>15 per halaman</option>
-            <option value="20" ${itemsPerPage === 20 ? 'selected' : ''}>20 per halaman</option>
-          </select>
-        </div>
+    for (let i = 1; i <= totalPages; i++) {
+      const btn = document.createElement("button");
+      btn.textContent = i;
+      btn.className =
+        "px-3 py-1 rounded border " +
+        (i === currentPage ? "bg-blue-600 text-white" : "bg-gray-100");
 
-        <div class="flex items-center space-x-2">
-    `;
-
-    // Prev
-    if (currentPage > 1) {
-      paginationHTML += `
-        <button onclick="goToPage(${currentPage - 1})" class="px-3 py-1 border rounded hover:bg-gray-100 transition-colors">
-          &laquo; Prev
-        </button>
-      `;
-    }
-
-    // pages
-    const maxVisiblePages = 5;
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      paginationHTML += `
-        <button onclick="goToPage(${i})" class="px-3 py-1 border rounded transition-colors ${i === currentPage ? 'bg-blue-600 text-white border-blue-600' : 'hover:bg-gray-100'}">
-          ${i}
-        </button>
-      `;
-    }
-
-    // Next
-    if (currentPage < totalPages) {
-      paginationHTML += `
-        <button onclick="goToPage(${currentPage + 1})" class="px-3 py-1 border rounded hover:bg-gray-100 transition-colors">
-          Next &raquo;
-        </button>
-      `;
-    }
-
-    paginationHTML += `
-        </div>
-        <div class="text-sm text-gray-700">
-          Halaman ${currentPage} dari ${totalPages}
-        </div>
-      </div>
-    `;
-
-    paginationContainer.innerHTML = paginationHTML;
-  }
-
-  // ----- Page controls -----
-  function goToPage(page) {
-    if (page < 1 || page > totalPages || page === currentPage) return;
-    currentPage = page;
-    const tabel = query('tabelSoal');
-    renderSoal(tabel);
-    renderPagination();
-    if (tabel) tabel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  function changeItemsPerPage(newItemsPerPage) {
-    itemsPerPage = parseInt(newItemsPerPage, 10) || 10;
-    currentPage = 1;
-    calculatePagination();
-    const tabel = query('tabelSoal');
-    renderSoal(tabel);
-    renderPagination();
-  }
-
-  // ----- Tambah soal (multipart/form-data) -----
-  async function tambahSoalAPI(soalData, tabel) {
-    if (!tabel) return;
-    showLoading(tabel, "Menyimpan soal...");
-
-    try {
-      const formData = new FormData();
-      formData.append('soal', soalData.soal);
-      formData.append('opsi_a', soalData.opsi_a);
-      formData.append('opsi_b', soalData.opsi_b);
-      formData.append('opsi_c', soalData.opsi_c);
-      formData.append('opsi_d', soalData.opsi_d);
-      formData.append('bobot_nilai', String(soalData.bobot_nilai ?? 0));
-      formData.append('opsi_benar', soalData.opsi_benar ?? '');
-
-      if (soalData.image_file instanceof File) {
-        formData.append('image_file', soalData.image_file);
-      } else if (typeof soalData.image_file === 'string' && soalData.image_file.startsWith('data:image')) {
-        // If the frontend gives base64 string, convert to blob
-        const blob = dataURLtoBlob(soalData.image_file);
-        formData.append('image_file', blob, 'upload.png');
-      }
-
-      // Append voice_file (audio) if provided
-      if (soalData.voice_file instanceof File) {
-        formData.append('voice_file', soalData.voice_file);
-      } else if (typeof soalData.voice_file === 'string' && soalData.voice_file.startsWith('data:audio')) {
-        // handle data URL audio if any (unlikely) - convert to blob
-        const blob = dataURLtoBlob(soalData.voice_file);
-        formData.append('voice_file', blob, 'upload.wav');
-      }
-
-      const res = await fetch(ENDPOINT_TAMBAH, {
-        method: 'POST',
-        body: formData // browser will set multipart/form-data boundary
-      });
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-
-      // Backend should return created soal data including id and image/audio URL (if any)
-      // Normalize result and push to dataSoal
-      const newItem = {
-        id_soal: json.id_soal ?? json.id ?? (dataSoal.length ? Math.max(...dataSoal.map(s => s.id_soal || 0)) + 1 : 1),
-        soal: json.soal ?? soalData.soal,
-        opsiA: json.opsi_a ?? soalData.opsi_a,
-        opsiB: json.opsi_b ?? soalData.opsi_b,
-        opsiC: json.opsi_c ?? soalData.opsi_c,
-        opsiD: json.opsi_d ?? soalData.opsi_d,
-        bobot: Number(json.bobot_nilai ?? soalData.bobot_nilai ?? 0),
-        opsiBenar: json.opsi_benar ?? soalData.opsi_benar ?? '',
-        image_raw: json.image_file ?? json.image_url ?? null,
-        image_url: isProbablyUrl(json.image_file ?? json.image_url ?? null) ? (json.image_file ?? json.image_url) : null,
-        voice_raw: json.voice_file ?? json.audio_file ?? null,
-        voice_url: isProbablyUrl(json.voice_file ?? json.audio_file ?? null) ? (json.voice_file ?? json.audio_file) : null
+      btn.onclick = () => {
+        currentPage = i;
+        renderTable();
+        renderPagination();
       };
 
-      dataSoal.unshift(newItem); // add to start so user sees it
-      calculatePagination();
-      // keep user on page 1 to show new item
-      currentPage = 1;
-      renderSoal(tabel);
-      renderPagination();
-
-      // reset previews
-      const previewBox = query('previewGambar');
-      const previewImg = query('previewImg');
-      if (previewBox) previewBox.classList.add('hidden');
-      if (previewImg) { previewImg.src = ''; previewImg.alt = ''; }
-
-      const previewAudioBox = query('previewAudio');
-      const audioPlayer = query('audioPlayer');
-      if (previewAudioBox) previewAudioBox.classList.add('hidden');
-      if (audioPlayer) { audioPlayer.src = ''; }
-
-      alert('Soal berhasil ditambahkan!');
-    } catch (err) {
-      console.error('Gagal menambah soal:', err);
-      alert('Gagal menambah soal. Lihat console untuk detail.');
-      renderSoal(tabel);
+      box.appendChild(btn);
     }
   }
 
-  // convert dataURL -> blob
-  function dataURLtoBlob(dataurl) {
-    const arr = dataurl.split(',');
-    const mimeMatch = arr[0].match(/:(.*?);/);
-    const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
-    const bstr = atob(arr[1]);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
-    }
-    return new Blob([u8arr], { type: mime });
-  }
+  // -------------------------------
+  // Tambah soal - DIUBAH
+  // -------------------------------
+  async function tambahSoal(soalData) {
+    console.log("Menambahkan soal dengan data:", soalData);
+    
+    const tabel = $("tabelSoal");
+    tabel.innerHTML = `<tr><td colspan="11" class="text-center p-4">Menyimpan...</td></tr>`;
 
-  // ----- Hapus soal -----
-  async function hapusSoal(id_soal) {
-    if (!confirm('Yakin ingin menghapus soal ini?')) return;
-    const tabel = query('tabelSoal');
-    if (!tabel) return;
-    showLoading(tabel, 'Menghapus soal...');
+    const { data, error } = await supabase
+      .from(TABLE)
+      .insert([soalData])
+      .select()
+      .single();
 
-    try {
-      const res = await fetch(ENDPOINT_HAPUS(id_soal), { method: 'DELETE' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      dataSoal = dataSoal.filter(x => x.id_soal !== id_soal);
-      calculatePagination();
-      // adjust currentPage if needed
-      if (currentPage > totalPages) currentPage = totalPages;
-      renderSoal(tabel);
-      renderPagination();
-      alert('Soal berhasil dihapus!');
-    } catch (err) {
-      console.error('Gagal menghapus soal:', err);
-      alert('Gagal menghapus soal. Lihat console untuk detail.');
-      renderSoal(tabel);
-      renderPagination();
-    }
-  }
-
-  // ----- Init form and preview -----
-  function initSoal() {
-    const form = query('formSoal');
-    const tabel = query('tabelSoal');
-    const inputFile = query('gambarSoal');
-    const previewBox = query('previewGambar');
-    const previewImg = query('previewImg');
-
-    const audioInput = query('audioSoal');
-    const previewAudio = query('previewAudio');
-    const audioPlayer = query('audioPlayer');
-
-    if (!form || !tabel) {
-      console.error('Form atau tabel soal tidak ditemukan!');
+    if (error) {
+      console.error("Error inserting data:", error);
+      alert("Gagal menyimpan soal: " + error.message);
       return;
     }
 
-    // Fetch initial data
-    fetchSoal(tabel);
+    console.log("Data berhasil disimpan:", data);
+    dataSoal.unshift(data);
+    totalPages = Math.ceil(dataSoal.length / itemsPerPage);
+    currentPage = 1;
 
-    // image file preview
-    if (inputFile && previewBox && previewImg) {
-      inputFile.addEventListener('change', (e) => {
-        const file = inputFile.files && inputFile.files[0];
-        if (!file) {
-          previewBox.classList.add('hidden');
-          previewImg.src = '';
-          return;
-        }
+    renderTable();
+    renderPagination();
 
-        // validate image size (optional) - max 5MB
-        const maxMB = 5;
-        if (file.size > maxMB * 1024 * 1024) {
-          alert(`Ukuran gambar maksimal ${maxMB} MB`);
-          inputFile.value = '';
-          previewBox.classList.add('hidden');
-          previewImg.src = '';
-          return;
-        }
+    alert("Soal berhasil ditambahkan!");
+  }
 
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-          previewImg.src = evt.target.result;
-          previewImg.alt = file.name;
-          previewBox.classList.remove('hidden');
-        };
-        reader.readAsDataURL(file);
-      });
+  // -------------------------------
+  // Hapus soal
+  // -------------------------------
+  window.hapusSoal = async function (id) {
+    if (!confirm("Hapus soal ini?")) return;
+
+    const { error } = await supabase.from(TABLE).delete().eq("id_soal", id);
+
+    if (error) {
+      alert("Gagal menghapus soal: " + error.message);
+      return;
     }
 
-    // audio file preview
-    if (audioInput && previewAudio && audioPlayer) {
-      audioInput.addEventListener('change', (e) => {
-        const file = audioInput.files && audioInput.files[0];
-        if (!file) {
-          previewAudio.classList.add('hidden');
-          audioPlayer.src = '';
-          return;
-        }
+    dataSoal = dataSoal.filter((s) => s.id_soal !== id);
+    totalPages = Math.ceil(dataSoal.length / itemsPerPage);
 
-        // optional: validate audio size (max 10MB)
-        const maxMB = 10;
-        if (file.size > maxMB * 1024 * 1024) {
-          alert(`Ukuran audio maksimal ${maxMB} MB`);
-          audioInput.value = '';
-          previewAudio.classList.add('hidden');
-          audioPlayer.src = '';
-          return;
-        }
+    renderTable();
+    renderPagination();
 
-        // show preview using object URL
-        const url = URL.createObjectURL(file);
-        audioPlayer.src = url;
-        previewAudio.classList.remove('hidden');
-      });
-    }
+    alert("Soal dihapus!");
+  };
 
-    // submit handler
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
+  // -------------------------------
+  // INIT FORM - DIUBAH
+  // -------------------------------
+  window.initSoal = async function () {
+    console.log("Initializing form...");
 
-      const soalVal = (query('soal')?.value || '').trim();
-      const opsiAVal = (query('opsiA')?.value || '').trim();
-      const opsiBVal = (query('opsiB')?.value || '').trim();
-      const opsiCVal = (query('opsiC')?.value || '').trim();
-      const opsiDVal = (query('opsiD')?.value || '').trim();
-      const bobotVal = Number(query('bobot')?.value || 0);
-      const opsiBenarVal = (query('opsiBenar')?.value || '').trim();
-      const imageFile = (query('gambarSoal') && query('gambarSoal').files && query('gambarSoal').files[0]) ? query('gambarSoal').files[0] : null;
-      const voiceFile = (query('audioSoal') && query('audioSoal').files && query('audioSoal').files[0]) ? query('audioSoal').files[0] : null;
+    const form = $("formSoal");
+    const gambarInput = $("gambarSoal");
+    const audioInput = $("audioSoal");
 
-      // basic validation
-      if (!soalVal || !opsiAVal || !opsiBVal || !opsiCVal || !opsiDVal || !opsiBenarVal || Number.isNaN(bobotVal)) {
-        alert('Lengkapi semua field yang wajib diisi!');
+    // Preview gambar
+    gambarInput.addEventListener("change", () => {
+      const file = gambarInput.files[0];
+      if (!file) {
+        $("previewGambar").classList.add("hidden");
         return;
       }
 
-      const soalData = {
-        soal: soalVal,
-        opsi_a: opsiAVal,
-        opsi_b: opsiBVal,
-        opsi_c: opsiCVal,
-        opsi_d: opsiDVal,
-        bobot_nilai: bobotVal,
-        opsi_benar: opsiBenarVal,
-        image_file: imageFile,
-        voice_file: voiceFile
-      };
-
-      tambahSoalAPI(soalData, tabel);
-
-      // reset form fields
-      form.reset();
-      if (previewBox) previewBox.classList.add('hidden');
-      if (previewImg) previewImg.src = '';
-      if (previewAudio) previewAudio.classList.add('hidden');
-      if (audioPlayer) audioPlayer.src = '';
+      console.log("Gambar dipilih:", file.name, file.type, file.size);
+      $("previewImg").src = URL.createObjectURL(file);
+      $("previewGambar").classList.remove("hidden");
     });
+
+    // Preview audio
+    audioInput.addEventListener("change", () => {
+      const file = audioInput.files[0];
+      if (!file) {
+        $("previewAudio").classList.add("hidden");
+        return;
+      }
+
+      console.log("Audio dipilih:", file.name, file.type, file.size);
+      $("audioPlayer").src = URL.createObjectURL(file);
+      $("previewAudio").classList.remove("hidden");
+    });
+
+    // Submit form
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      console.log("Form submitted");
+
+      // Ambil nilai form
+      const soal = $("soal").value.trim();
+      const opsiA = $("opsiA").value.trim();
+      const opsiB = $("opsiB").value.trim();
+      const opsiC = $("opsiC").value.trim();
+      const opsiD = $("opsiD").value.trim();
+      const bobot = Number($("bobot").value);
+      const opsiBenar = $("opsiBenar").value.trim();
+
+      const imageFile = gambarInput.files[0];
+      const audioFile = audioInput.files[0];
+
+      console.log("Data form:", { soal, opsiA, opsiB, opsiC, opsiD, bobot, opsiBenar });
+      console.log("Image file:", imageFile);
+      console.log("Audio file:", audioFile);
+
+      // Validasi
+      if (!soal || !opsiA || !opsiB || !opsiC || !opsiD || !opsiBenar) {
+        alert("Harap isi semua field yang wajib!");
+        return;
+      }
+
+      // Tampilkan loading
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.textContent = "Menyimpan...";
+      submitBtn.disabled = true;
+
+      try {
+        // Upload file secara paralel
+        const [imageUrl, audioUrl] = await Promise.all([
+          uploadFile(imageFile, "image"),
+          uploadFile(audioFile, "audio")
+        ]);
+
+        console.log("Upload results:", { imageUrl, audioUrl });
+
+        // Simpan ke database
+        await tambahSoal({
+          soal,
+          opsi_a: opsiA,
+          opsi_b: opsiB,
+          opsi_c: opsiC,
+          opsi_d: opsiD,
+          bobot_nilai: bobot,
+          opsi_benar: opsiBenar,
+          image_file: imageUrl,
+          voice_file: audioUrl,
+        });
+
+        // Reset form
+        form.reset();
+        $("previewGambar").classList.add("hidden");
+        $("previewAudio").classList.add("hidden");
+
+      } catch (error) {
+        console.error("Error dalam proses submit:", error);
+        alert("Terjadi kesalahan: " + error.message);
+      } finally {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+      }
+    });
+
+    // Load data awal
+    await loadData();
+    
+    console.log("Form initialized successfully");
+  };
+
+  document.addEventListener("DOMContentLoaded", loginCheck);
+
+  function loginCheck() {
+    console.log("DOM Content Loaded");
+    if (typeof window.initSoal === "function") {
+      window.initSoal();
+    } else {
+      console.error("initSoal function not found");
+    }
   }
 
-  // expose to global scope so inline onclick works
-  window.initSoal = initSoal;
-  window.hapusSoal = hapusSoal;
-  window.goToPage = goToPage;
-  window.changeItemsPerPage = changeItemsPerPage;
-
-  // auto init when DOM ready
-  document.addEventListener('DOMContentLoaded', initSoal);
 })();
