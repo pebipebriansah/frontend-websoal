@@ -1,6 +1,6 @@
-let currentScript = null; // Script halaman aktif saat ini
+let currentScript = null;
 
-// 🔐 Fungsi untuk memeriksa login
+// 🔐 Cek login
 function checkLogin() {
   const idUser = localStorage.getItem('id_user');
   const username = localStorage.getItem('username');
@@ -12,31 +12,28 @@ function checkLogin() {
   return true;
 }
 
-// 📄 Fungsi utama untuk load halaman dinamis
+// 📄 Load halaman
 async function loadPage(page) {
   if (!checkLogin()) return;
 
   const content = document.getElementById('content');
-  if (!content) return console.error("❌ Element #content tidak ditemukan di HTML utama!");
+  if (!content) {
+    console.error("❌ #content tidak ditemukan");
+    return;
+  }
 
   try {
-    // --- Load HTML halaman ---
     const res = await fetch(`pages/${page}.html`);
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    const html = await res.text();
+    if (!res.ok) throw new Error(res.status);
+    content.innerHTML = await res.text();
 
-    content.innerHTML = html;
+    await new Promise(r => requestAnimationFrame(r));
 
-    // Tunggu render DOM selesai
-    await new Promise((resolve) => requestAnimationFrame(resolve));
-
-    // --- Hapus script sebelumnya ---
     if (currentScript) {
       currentScript.remove();
       currentScript = null;
     }
 
-    // --- Tentukan script JS yang sesuai dengan halaman ---
     const scriptMap = {
       soal: 'js/soal.js',
       nilai: 'js/nilai.js',
@@ -46,63 +43,48 @@ async function loadPage(page) {
     };
 
     const scriptPath = scriptMap[page];
-    if (!scriptPath) {
-      console.warn(`⚠️ Tidak ada script terdaftar untuk halaman: ${page}`);
-      return;
-    }
+    if (!scriptPath) return;
 
-    // --- Load script JS halaman ---
     currentScript = document.createElement('script');
     currentScript.src = scriptPath;
-    currentScript.defer = true; // 🔄 biar load setelah DOM siap
+    currentScript.defer = true;
+
     currentScript.onload = async () => {
-      console.log(`✅ Script ${scriptPath} berhasil dimuat.`);
+      console.log(`✅ ${scriptPath} loaded`);
+      await new Promise(r => requestAnimationFrame(r));
 
-      // Pastikan DOM halaman benar-benar siap
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-
-      // --- Inisialisasi modul per halaman ---
       switch (page) {
         case 'soal':
-          if (typeof initSoal === 'function') initSoal();
+          if (typeof initSoal === "function") initSoal();
+          break;
+
+        case 'description':
+          if (typeof initDescription === "function") {
+            initDescription();
+          } else {
+            console.error("❌ initDescription() tidak ditemukan");
+          }
           break;
 
         case 'nilai':
-          if (typeof NilaiModule !== 'undefined') {
+          if (typeof NilaiModule !== "undefined") {
             NilaiModule.init("tabelNilai");
           }
           break;
 
         case 'anggota':
-          if (typeof AnggotaModule !== 'undefined') {
-            AnggotaModule.init("formAnggota", "tabelAnggota", "hasilAnggota", "paginationAnggota");
-          }
-          break;
-
-        case 'description':
-          if (typeof DescriptionModule !== 'undefined') {
-            // 🔍 Tambahan pengecekan sebelum init
-            const ids = [
-              "formDescription",
-              "selectMateri",
-              "namaMateriBaru",
-              "containerMateriBaru",
-              "tabelDescription",
-              "hasil",
-              "pagination"
-            ];
-
-            const missing = ids.filter(id => !document.getElementById(id));
-            if (missing.length > 0) {
-              console.error(`❌ Elemen berikut tidak ditemukan di DOM: ${missing.join(', ')}`);
-            } else {
-              DescriptionModule.init(...ids);
-            }
+          if (typeof AnggotaModule !== "undefined") {
+            AnggotaModule.init(
+              "formAnggota",
+              "tabelAnggota",
+              "hasilAnggota",
+              "paginationAnggota"
+            );
           }
           break;
 
         case 'home':
-          if (typeof DashboardModule !== 'undefined') {
+          if (typeof DashboardModule !== "undefined") {
             DashboardModule.init();
           }
           break;
@@ -112,19 +94,18 @@ async function loadPage(page) {
     document.body.appendChild(currentScript);
 
   } catch (err) {
-    console.error("❌ Error loadPage:", err);
-    content.innerHTML = `<p class="text-red-600 text-center mt-4">Gagal memuat halaman <b>${page}</b></p>`;
+    console.error("❌ loadPage error:", err);
+    content.innerHTML = `<p class="text-red-600 text-center">Gagal memuat halaman</p>`;
   }
 }
 
-// 🚪 Fungsi logout
+// 🚪 Logout
 function logout() {
-  localStorage.removeItem('id_user');
-  localStorage.removeItem('username');
+  localStorage.clear();
   window.location.href = 'index.html';
 }
 
-// 🚀 Saat halaman utama selesai dimuat
+// 🚀 Init awal
 document.addEventListener("DOMContentLoaded", () => {
   if (checkLogin()) loadPage("home");
 });

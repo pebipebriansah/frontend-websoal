@@ -5,8 +5,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kelola Description Materi</title>
+
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Load Supabase JS terlebih dahulu -->
+
+  <!-- Supabase JS -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 
@@ -17,139 +20,101 @@
       Kelola Description Materi
     </h1>
 
-    <!-- Form Description -->
+    <!-- ================= FORM ================= -->
     <form id="formDescription" class="bg-white p-6 rounded-xl shadow-md mb-6 space-y-6" enctype="multipart/form-data">
+
+      <!-- Info Mode -->
+      <div id="infoMode"
+        class="hidden bg-yellow-50 border border-yellow-300 text-yellow-700 px-4 py-2 rounded-lg text-sm">
+        Mode Update: data description untuk materi ini sudah ada
+      </div>
 
       <!-- Pilih Materi -->
       <div>
-        <label class="block text-sm font-semibold mb-2 text-gray-700">Pilih Materi</label>
-        <select id="selectMateri" name="id_materi"
-          class="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+        <label for="selectMateri" class="block text-sm font-semibold mb-2 text-gray-700">
+          Pilih Materi
+        </label>
+        <select id="selectMateri" class="border border-gray-300 rounded-lg p-3 w-full">
           <option value="">-- Pilih Materi --</option>
         </select>
       </div>
 
-      <!-- Tambah Materi Baru -->
-      <div id="containerMateriBaru" class="hidden">
-        <label class="block text-sm font-semibold mb-2 text-gray-700">Tambah Materi Baru</label>
-        <input type="text" id="namaMateriBaru" name="nama_materi" placeholder="Nama Materi Baru"
-          class="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
-      </div>
-
       <!-- Deskripsi -->
       <div>
-        <label class="block text-sm font-semibold mb-2 text-gray-700">Deskripsi Materi</label>
-        <textarea id="description" name="description" placeholder="Tulis deskripsi materi..."
-          class="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none transition h-32"></textarea>
+        <label for="description" class="block text-sm font-semibold mb-2 text-gray-700">
+          Deskripsi Materi
+        </label>
+        <textarea id="description" class="border border-gray-300 rounded-lg p-3 w-full h-32"
+          placeholder="Tulis deskripsi materi..."></textarea>
       </div>
 
-      <!-- Upload File Image -->
+      <!-- Upload Image -->
       <div>
-        <label class="block text-sm font-semibold mb-2 text-gray-700">Upload Gambar (Image)</label>
-        <input type="file" name="image_file" id="image_file" accept="image/*"
-          class="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700" />
-        <p id="previewImage" class="text-xs text-gray-500 mt-1">Belum ada file yang dipilih</p>
+        <label for="imageFile" class="block text-sm font-semibold mb-2 text-gray-700">
+          Upload Gambar
+        </label>
+        <input type="file" id="imageFile" accept="image/*" class="block">
+
+        <!-- Preview Image -->
+        <img id="previewImage" class="mt-3 w-40 rounded border hidden" alt="Preview Gambar">
       </div>
 
-      <!-- Upload File Voice -->
+      <!-- Upload Voice -->
       <div>
-        <label class="block text-sm font-semibold mb-2 text-gray-700">Upload Suara (Voice)</label>
-        <input type="file" name="voice_file" id="voice_file" accept="audio/*"
-          class="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-600 file:text-white hover:file:bg-green-700" />
-        <p id="previewVoice" class="text-xs text-gray-500 mt-1">Belum ada file yang dipilih</p>
+        <label for="voiceFile" class="block text-sm font-semibold mb-2 text-gray-700">
+          Upload Suara
+        </label>
+        <input type="file" id="voiceFile" accept="audio/*" class="block">
+
+        <!-- Preview Audio -->
+        <audio id="previewVoice" controls class="mt-3 w-full hidden">
+        </audio>
       </div>
 
-      <!-- Tombol Simpan / Update -->
-      <div class="flex items-center gap-3">
-        <button id="btnSubmit" type="submit"
-          class="bg-blue-600 text-white px-5 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">Simpan
-          Description</button>
+      <!-- Action -->
+      <div class="flex gap-3">
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold">
+          Simpan Description
+        </button>
 
-        <button id="btnCancel" type="button"
-          class="hidden bg-gray-400 text-white px-5 py-3 rounded-lg font-semibold hover:bg-gray-500 transition">Batal</button>
+        <button type="button" id="btnCancel"
+          class="hidden bg-gray-400 hover:bg-gray-500 text-white px-6 py-3 rounded-lg">
+          Batal
+        </button>
       </div>
 
-      <!-- Hidden field untuk ID description -->
-      <input type="hidden" id="idDescription" name="id_description" />
-
-      <p id="hasil" class="mt-2 text-sm font-medium text-gray-700"></p>
+      <!-- Hidden -->
+      <input type="hidden" id="idDescription">
     </form>
 
-    <!-- Tabel Description -->
-    <div class="overflow-x-auto bg-white p-6 rounded-xl shadow-md">
-
-      <table class="min-w-full divide-y divide-gray-200">
+    <!-- ================= TABLE ================= -->
+    <div class="bg-white p-6 rounded-xl shadow-md overflow-x-auto">
+      <table class="min-w-full divide-y">
         <thead class="bg-gray-100">
           <tr>
-            <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">ID</th>
-            <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Materi</th>
-            <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Deskripsi</th>
-            <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Image</th>
-            <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Voice</th>
-            <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700">Aksi</th>
+            <th class="px-5 py-3 text-left">ID</th>
+            <th class="px-5 py-3 text-left">Materi</th>
+            <th class="px-5 py-3 text-left">Deskripsi</th>
+            <th class="px-5 py-3 text-left">Image</th>
+            <th class="px-5 py-3 text-left">Voice</th>
+            <th class="px-5 py-3 text-left">Aksi</th>
           </tr>
         </thead>
 
-        <tbody id="tabelDescription" class="divide-y divide-gray-200 text-gray-700 text-sm">
-          <!-- JS Rendering Rows -->
+        <tbody id="tabelDescription">
           <tr>
-            <td colspan="6" class="px-5 py-8 text-center text-gray-500">
-              <div class="flex flex-col items-center justify-center">
-                <svg class="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                  </path>
-                </svg>
-                Memuat data...
-              </div>
+            <td colspan="6" class="text-center text-gray-400 py-6">
+              Memuat data...
             </td>
           </tr>
         </tbody>
       </table>
 
-      <!-- Pagination -->
-      <div id="pagination" class="flex justify-center mt-4 space-x-2"></div>
-
+      <div id="pagination" class="flex justify-center mt-4 gap-2"></div>
     </div>
-
   </div>
 
-  <!-- Memanggil script DescriptionModule -->
-  <script>
-    // Pastikan DOM sudah sepenuhnya dimuat
-    document.addEventListener('DOMContentLoaded', function () {
-      console.log('DOM fully loaded');
-
-      // Tunggu sedikit untuk memastikan semua elemen tersedia
-      setTimeout(function () {
-        if (typeof MateriModule !== 'undefined' && typeof MateriModule.init === 'function') {
-          console.log('Initializing MateriModule...');
-          MateriModule.init();
-        } else {
-          console.error('MateriModule not found or init function not available');
-
-          // Tampilkan error di halaman
-          const tabel = document.getElementById('tabelDescription');
-          if (tabel) {
-            tabel.innerHTML = `
-              <tr>
-                <td colspan="6" class="px-5 py-8 text-center text-red-600">
-                  <div class="flex flex-col items-center justify-center">
-                    <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.698-.833-2.464 0L4.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                    </svg>
-                    Error: JavaScript module tidak ditemukan. Periksa console browser.
-                  </div>
-                </td>
-              </tr>
-            `;
-          }
-        }
-      }, 100);
-    });
-  </script>
-
-
+  <!-- ❗ description.js dipanggil oleh main.js -->
 </body>
 
 </html>
