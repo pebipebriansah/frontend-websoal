@@ -7,8 +7,8 @@
   }
 
   const supabaseClient = supabase.createClient(
-    "https://jwtrpjzlewbnqfuqqjfr.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3dHJwanpsZXdibnFmdXFxamZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjU2MTUsImV4cCI6MjA3OTk0MTYxNX0.9toQAPwc7Fm5bW05VOQnkArAKWQFy8Sg8QsdWqVaqCo"
+    "https://cwjjqubiuzdstxmtemxa.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3ampxdWJpdXpkc3R4bXRlbXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMTk3ODcsImV4cCI6MjA5NDc5NTc4N30.s5ndWn0PRdzKZ8yAIbUJyChWCEKIcz1tu-fCEqELsw0"
   );
 
   const DashboardModule = {
